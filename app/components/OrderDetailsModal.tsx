@@ -1,4 +1,5 @@
-import React from "react";
+import React, { useState } from "react";
+import { ChevronDown, ChevronUp, User } from "lucide-react";
 import type { Order } from "../types/orders";
 
 export default function OrderDetailsModal({
@@ -10,6 +11,8 @@ export default function OrderDetailsModal({
   onClose: () => void;
   onConfirm: () => void;
 }) {
+  const [expandCustomer, setExpandCustomer] = useState(false);
+
   const fmt = (v: unknown) => {
     const n = Number(v);
     return Number.isFinite(n) ? `$${n.toFixed(2)}` : "—";
@@ -49,6 +52,76 @@ export default function OrderDetailsModal({
             <p className="text-white">{order.phone_number ?? "-"}</p>
           </div>
         </div>
+
+        {/* Customer Account Section */}
+        {order.customer && (
+          <div className="mb-4 border border-zinc-700 rounded-lg overflow-hidden">
+            <button
+              onClick={() => setExpandCustomer(!expandCustomer)}
+              className="w-full flex items-center justify-between p-4 hover:bg-zinc-800/50 transition-colors"
+            >
+              <div className="flex items-center gap-3">
+                <User size={20} className="text-primary" />
+                <div className="text-left">
+                  <p className="text-sm font-semibold text-white">Customer Account</p>
+                  <p className="text-xs text-gray-400">{order.customer.name}</p>
+                </div>
+              </div>
+              {expandCustomer ? (
+                <ChevronUp size={20} className="text-gray-400" />
+              ) : (
+                <ChevronDown size={20} className="text-gray-400" />
+              )}
+            </button>
+
+            {expandCustomer && (
+              <div className="border-t border-zinc-700 p-4 bg-zinc-800/30">
+                <div className="grid grid-cols-2 gap-4 text-sm">
+                  <div>
+                    <p className="text-gray-400">Account Name</p>
+                    <p className="text-white font-semibold">{order.customer.name}</p>
+                  </div>
+                  <div>
+                    <p className="text-gray-400">Email</p>
+                    <p className="text-white">{order.customer.email}</p>
+                  </div>
+                  <div>
+                    <p className="text-gray-400">Phone</p>
+                    <p className="text-white">{order.customer.phone ?? "-"}</p>
+                  </div>
+                  <div>
+                    <p className="text-gray-400">Member Since</p>
+                    <p className="text-white">
+                      {order.customer.created_at
+                        ? new Date(order.customer.created_at).toLocaleDateString()
+                        : "-"}
+                    </p>
+                  </div>
+                  {order.customer.order_count !== undefined && (
+                    <div>
+                      <p className="text-gray-400">Total Orders</p>
+                      <p className="text-white font-semibold">{order.customer.order_count}</p>
+                    </div>
+                  )}
+                  {order.customer.total_spent !== undefined && (
+                    <div>
+                      <p className="text-gray-400">Total Spent</p>
+                      <p className="text-white font-semibold">
+                        ${(order.customer.total_spent / 100).toFixed(2)}
+                      </p>
+                    </div>
+                  )}
+                  {order.customer.address && (
+                    <div className="col-span-2">
+                      <p className="text-gray-400">Address</p>
+                      <p className="text-white">{order.customer.address}</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
 
         <div className="mb-4">
           <p className="text-gray-400 text-sm">Shipping</p>

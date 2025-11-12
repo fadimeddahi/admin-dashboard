@@ -21,8 +21,13 @@ export default function LoginPage() {
     try {
       const response = await login(username, password);
       
+      if (!response.token && !response.access_token) {
+        setError("Server did not return an authentication token. Please contact support.");
+        return;
+      }
+      
       // Store auth data
-      storeAuthData(response.token, response.username);
+      storeAuthData(response.token || response.access_token, response.username);
       
       // Check if user is admin
       if (isAdmin()) {
@@ -35,7 +40,20 @@ export default function LoginPage() {
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : String(err);
       console.error("Login error:", err);
-      setError(message || "Login failed. Please check your credentials.");
+      
+      // Provide specific error messages
+      let displayError = message || "Login failed. Please check your credentials.";
+      if (message.includes("401")) {
+        displayError = "❌ Invalid username or password. Please try again.";
+      } else if (message.includes("missing access token")) {
+        displayError = "❌ Server authentication error. The server did not return a token.";
+      } else if (message.includes("Network error")) {
+        displayError = "❌ Network error. Check your connection and that the server is running.";
+      } else {
+        displayError = `❌ ${message}`;
+      }
+      
+      setError(displayError);
     } finally {
       setLoading(false);
     }

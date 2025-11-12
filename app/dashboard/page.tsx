@@ -1,6 +1,6 @@
 "use client";
 
-import { DollarSign, ShoppingCart, Package, Clock } from "lucide-react";
+import { DollarSign, ShoppingCart, Package, Users } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { authenticatedFetch, API_BASE_URL } from "../../lib/auth";
 import StatCard from "../components/StatCard";
@@ -10,8 +10,30 @@ import type { Order } from "../types/orders";
 import type { Product } from "../types/products";
 import type { RecentOrder, LowStockProduct } from "../types/dashboard";
 
+interface StatsData {
+  success: boolean;
+  data: {
+    total_revenue: number;
+    total_orders: number;
+    total_products: number;
+    total_customers: number;
+  };
+}
+
 export default function DashboardPage() {
-  // Fetch orders
+  // Fetch dashboard stats
+  const { data: statsData, isLoading: statsLoading } = useQuery<StatsData>({
+    queryKey: ["stats"],
+    queryFn: async () => {
+      const res = await authenticatedFetch(`${API_BASE_URL}/stats`);
+      if (!res.ok) throw new Error("Failed to fetch stats");
+      return res.json();
+    },
+  });
+
+  const stats = statsData?.data;
+
+  // Fetch orders for recent orders section
   const { data: orders = [], isLoading: ordersLoading } = useQuery<Order[]>({
     queryKey: ["orders"],
     queryFn: async () => {
@@ -21,7 +43,7 @@ export default function DashboardPage() {
     },
   });
 
-  // Fetch products
+  // Fetch products for low stock alerts
   const { data: products = [], isLoading: productsLoading } = useQuery<Product[]>({
     queryKey: ["products"],
     queryFn: async () => {
@@ -31,11 +53,10 @@ export default function DashboardPage() {
     },
   });
 
-  // Calculate stats
-  const totalRevenue = orders.reduce((sum, o) => sum + (Number(o.total) || 0), 0);
-  const totalOrders = orders.length;
-  const pendingOrders = orders.filter((o) => !o.confirmed).length;
-  const totalProducts = products.length;
+  const totalRevenue = stats?.total_revenue || 0;
+  const totalOrders = stats?.total_orders || 0;
+  const totalProducts = stats?.total_products || 0;
+  const totalCustomers = stats?.total_customers || 0;
 
   // Recent orders (last 5)
   const recentOrders: RecentOrder[] = [...orders]
@@ -57,8 +78,6 @@ export default function DashboardPage() {
     }))
     .slice(0, 5);
 
-  const isLoading = ordersLoading || productsLoading;
-
   return (
     <div className="space-y-8">
       <div>
@@ -70,31 +89,31 @@ export default function DashboardPage() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <StatCard
           name="Total Revenue"
-          value={`$${totalRevenue.toFixed(2)}`}
+          value={`$${(totalRevenue / 100).toFixed(2)}`}
           icon={DollarSign}
           color="bg-green-500"
-          isLoading={isLoading}
+          isLoading={statsLoading}
         />
         <StatCard
           name="Total Orders"
           value={totalOrders}
           icon={ShoppingCart}
           color="bg-blue-500"
-          isLoading={isLoading}
+          isLoading={statsLoading}
         />
         <StatCard
-          name="Pending Orders"
-          value={pendingOrders}
-          icon={Clock}
-          color="bg-yellow-500"
-          isLoading={isLoading}
+          name="Total Customers"
+          value={totalCustomers}
+          icon={Users}
+          color="bg-purple-500"
+          isLoading={statsLoading}
         />
         <StatCard
           name="Total Products"
           value={totalProducts}
           icon={Package}
-          color="bg-purple-500"
-          isLoading={isLoading}
+          color="bg-indigo-500"
+          isLoading={statsLoading}
         />
       </div>
 

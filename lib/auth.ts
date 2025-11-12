@@ -59,14 +59,21 @@ export function getUsername(): string | null {
 export function storeAuthData(token: string, username: string) {
   if (typeof window === "undefined") return;
   
+  if (!token) {
+    console.error("storeAuthData called with empty token");
+    throw new Error("Cannot store auth data: token is required");
+  }
+
   localStorage.setItem(STORAGE_KEYS.TOKEN, token);
-  localStorage.setItem(STORAGE_KEYS.USERNAME, username);
+  localStorage.setItem(STORAGE_KEYS.USERNAME, username || "admin");
   
   // Decode and store role
   const decoded = decodeToken(token);
   if (decoded?.role) {
     localStorage.setItem(STORAGE_KEYS.ROLE, decoded.role);
   }
+  
+  console.debug("Auth data stored successfully", { username, tokenPreview: `${token.slice(0, 10)}...` });
 }
 
 // Clear auth data
@@ -81,6 +88,11 @@ export function clearAuthData() {
 // Admin Login API call
 export async function login(username: string, password: string) {
   try {
+    console.log("=== LOGIN DEBUG START ===");
+    console.log("Endpoint:", AUTH_ENDPOINTS.LOGIN);
+    console.log("Username:", username);
+    console.log("Payload:", JSON.stringify({ username, password }));
+    
     const response = await fetch(AUTH_ENDPOINTS.LOGIN, {
       method: "POST",
       headers: {
@@ -89,20 +101,63 @@ export async function login(username: string, password: string) {
       body: JSON.stringify({ username, password }),
     });
 
+    console.log("Response Status:", response.status, response.statusText);
+    console.log("Response Headers:", {
+      contentType: response.headers.get("content-type"),
+      cors: response.headers.get("access-control-allow-origin"),
+    });
+
     if (!response.ok) {
       let errorMessage = "Login failed";
+      let errorData = null;
       try {
-        const errorData = await response.json();
-        errorMessage = errorData.message || errorData.error || `Error ${response.status}: ${response.statusText}`;
-      } catch {
+        const text = await response.text();
+        console.error("Raw response text:", text);
+        
+        if (text) {
+          errorData = JSON.parse(text);
+          console.error("Parsed error response:", errorData);
+          errorMessage = errorData.message || errorData.error || errorData.msg || `Error ${response.status}: ${response.statusText}`;
+        } else {
+          errorMessage = `Error ${response.status}: ${response.statusText}`;
+        }
+      } catch (e) {
+        console.error("Failed to parse error response:", e);
         errorMessage = `Error ${response.status}: ${response.statusText}`;
       }
+      console.log("=== LOGIN DEBUG END (ERROR) ===");
       throw new Error(errorMessage);
     }
 
-    const data = await response.json();
-    return data;
+    const text = await response.text();
+    console.log("Raw response body:", text);
+    
+    const data = JSON.parse(text);
+    console.log("Parsed response data:", data);
+    console.log("Available fields in response:", Object.keys(data));
+    
+    // Validate response contains token
+    if (!data.token && !data.access_token && !data.data?.token && !data.data?.access_token) {
+      console.error("login: response missing token field in any format:", data);
+      console.log("=== LOGIN DEBUG END (NO TOKEN) ===");
+      throw new Error("missing access token - backend did not return a token in expected format");
+    }
+
+    // Support various response formats from different backends
+    const token = data.token || data.access_token || data.data?.token || data.data?.access_token;
+    const user = data.username || data.user?.username || data.data?.username || username;
+    
+    console.log("Extracted token:", !!token, "Extracted username:", user);
+    console.log("=== LOGIN DEBUG END (SUCCESS) ===");
+
+    // Support both 'token' and 'access_token' field names from backend
+    return {
+      token,
+      username: user,
+      ...data
+    };
   } catch (error) {
+    console.log("=== LOGIN DEBUG END (EXCEPTION) ===");
     if (error instanceof Error) {
       throw error;
     }

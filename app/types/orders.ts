@@ -5,6 +5,17 @@ export interface OrderItem {
   price: number;
 }
 
+export interface Customer {
+  id: number;
+  name: string;
+  email: string;
+  phone?: string;
+  address?: string;
+  created_at?: string;
+  order_count?: number;
+  total_spent?: number;
+}
+
 export interface Order {
   id: number | string;
   number?: string;
@@ -20,4 +31,5 @@ export interface Order {
   shipping_price?: number;
   notes?: string;
   test_field?: string;
+  customer?: Customer;
 }
