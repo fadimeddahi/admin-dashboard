@@ -220,6 +220,7 @@ export async function authenticatedFetch(url: string, options: RequestInit = {})
   const response = await fetch(url, {
     ...options,
     headers,
+    credentials: "include", // Include cookies and credentials
   });
 
   // Log response status and body on failure to aid debugging
