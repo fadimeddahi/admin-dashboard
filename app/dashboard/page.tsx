@@ -47,7 +47,7 @@ export default function DashboardPage() {
   const { data: products = [], isLoading: productsLoading } = useQuery<Product[]>({
     queryKey: ["products"],
     queryFn: async () => {
-      const res = await authenticatedFetch(`${API_BASE_URL}/products`);
+      const res = await authenticatedFetch(`${API_BASE_URL}/products/all`);
       if (!res.ok) throw new Error("Failed to fetch products");
       return res.json();
     },
