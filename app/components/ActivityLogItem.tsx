@@ -111,6 +111,11 @@ export default function ActivityLogItem({ log, isLoading }: ActivityLogItemProps
         </div>
 
         <div className="text-right flex-shrink-0">
+          {log.username && (
+            <p className="text-xs text-amber-300 font-medium whitespace-nowrap mb-1">
+              @{log.username}
+            </p>
+          )}
           <p className="text-xs text-gray-400 whitespace-nowrap">{timeAgo}</p>
           <p className="text-[10px] text-gray-500 mt-1 font-mono">ID: {log.id}</p>
         </div>

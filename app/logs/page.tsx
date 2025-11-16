@@ -1,7 +1,8 @@
 "use client";
 
 import React from "react";
-import { Activity } from "lucide-react";
+import { Activity, ArrowLeft } from "lucide-react";
+import Link from "next/link";
 import ActivityLogList from "../components/ActivityLogList";
 
 export default function LogsPage() {
@@ -18,6 +19,13 @@ export default function LogsPage() {
             Complete audit trail of all admin activities, product changes, and order actions
           </p>
         </div>
+        <Link
+          href="/dashboard"
+          className="flex items-center gap-2 px-4 py-2 bg-zinc-800 hover:bg-zinc-700 rounded-lg transition-colors text-gray-300 hover:text-white"
+        >
+          <ArrowLeft className="w-5 h-5" />
+          Back to Dashboard
+        </Link>
       </div>
 
       {/* Logs List */}
