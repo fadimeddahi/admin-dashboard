@@ -54,11 +54,11 @@ export default function ActivityLogList({ limit }: ActivityLogListProps) {
         log.admin_id?.toString().includes(searchQuery);
 
       const matchesAction =
-        !actionFilter || log.action.toLowerCase() === actionFilter.toLowerCase();
+        !actionFilter || (log.action?.toLowerCase().trim() === actionFilter.toLowerCase().trim());
 
       const matchesEntity =
         !entityFilter ||
-        log.entity_type.toLowerCase() === entityFilter.toLowerCase();
+        (log.entity_type?.toLowerCase().trim() === entityFilter.toLowerCase().trim());
 
       return matchesSearch && matchesAction && matchesEntity;
     });
