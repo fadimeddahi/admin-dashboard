@@ -27,7 +27,7 @@ export default function ActivityLogList({ limit }: ActivityLogListProps) {
     queryKey: ["activityLogs"],
     queryFn: async () => {
       const response = await authenticatedFetch(
-        `${API_BASE_URL}/logs`
+        `${API_BASE_URL}/logs/all`
       );
       if (!response.ok) {
         throw new Error(
