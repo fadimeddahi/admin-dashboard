@@ -2,9 +2,10 @@
 
 import React, { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Plus, Edit2, Trash2, X } from "lucide-react";
+import { Plus, Edit2, Trash2, X, AlertCircle } from "lucide-react";
 import { createCPU, updateCPU, deleteCPU, type CPU } from "@/lib/components";
 import { authenticatedFetch, API_BASE_URL } from "@/lib/auth";
+import { getUserFriendlyError } from "@/lib/errorHandler";
 
 interface CPUFormData {
   name: string;
@@ -27,8 +28,9 @@ export default function CPUComponentManager() {
   const [formData, setFormData] = useState<CPUFormData>(initialFormData);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string>("");
 
-  const { data: cpus = [], isLoading: isFetching } = useQuery({
+  const { data: cpus = [], isLoading: isFetching, error: fetchError } = useQuery({
     queryKey: ["cpus"],
     queryFn: async () => {
       const response = await authenticatedFetch(`${API_BASE_URL}/components/cpu`);
@@ -43,6 +45,11 @@ export default function CPUComponentManager() {
       queryClient.invalidateQueries({ queryKey: ["cpus"] });
       resetForm();
       setIsModalOpen(false);
+      setErrorMessage("");
+    },
+    onError: (error: Error) => {
+      setErrorMessage(getUserFriendlyError(error));
+      console.error("Create CPU failed:", error);
     },
   });
 
@@ -53,6 +60,11 @@ export default function CPUComponentManager() {
       queryClient.invalidateQueries({ queryKey: ["cpus"] });
       resetForm();
       setIsModalOpen(false);
+      setErrorMessage("");
+    },
+    onError: (error: Error) => {
+      setErrorMessage(getUserFriendlyError(error));
+      console.error("Update CPU failed:", error);
     },
   });
 
@@ -60,6 +72,11 @@ export default function CPUComponentManager() {
     mutationFn: (id: string) => deleteCPU(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["cpus"] });
+      setErrorMessage("");
+    },
+    onError: (error: Error) => {
+      setErrorMessage(getUserFriendlyError(error));
+      console.error("Delete CPU failed:", error);
     },
   });
 
@@ -205,6 +222,22 @@ export default function CPUComponentManager() {
             </div>
 
             <form onSubmit={handleSubmit} className="p-4 space-y-4">
+              {errorMessage && (
+                <div className="rounded-lg border border-red-500/20 bg-red-500/10 p-3 flex items-start gap-2">
+                  <AlertCircle className="h-4 w-4 text-red-500 flex-shrink-0 mt-0.5" />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm text-red-300">{errorMessage}</p>
+                  </div>
+                  <button
+                    onClick={() => setErrorMessage("")}
+                    type="button"
+                    className="text-red-400 hover:text-red-300 flex-shrink-0"
+                  >
+                    <X size={16} />
+                  </button>
+                </div>
+              )}
+
               <div>
                 <label className="block text-sm font-medium text-gray-300 mb-1">Name</label>
                 <input

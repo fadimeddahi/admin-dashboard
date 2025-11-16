@@ -1,9 +1,10 @@
-import { X } from "lucide-react";
+import { X, AlertCircle } from "lucide-react";
 import React, { useState } from "react";
 import Image from "next/image";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Product, TabType, Category } from "../types/products";
 import { getToken } from "../../lib/auth";
+import { getUserFriendlyError } from "../../lib/errorHandler";
 
 interface ProductModalProps {
   editingProduct: Product | null;
@@ -124,6 +125,7 @@ export default function ProductModal({
 }: ProductModalProps) {
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string>("");
+  const [errorMessage, setErrorMessage] = useState<string>("");
   
   const queryClient = useQueryClient();
 
@@ -133,10 +135,13 @@ export default function ProductModal({
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['products'] });
       setIsModalOpen(false);
+      setErrorMessage("");
       // Reset form if needed
     },
     onError: (error: Error) => {
-      alert(`Error: ${error.message}`);
+      const friendlyMessage = getUserFriendlyError(error);
+      setErrorMessage(friendlyMessage);
+      console.error("Create product failed:", error);
     },
   });
 
@@ -147,9 +152,12 @@ export default function ProductModal({
       queryClient.invalidateQueries({ queryKey: ['products'] });
       queryClient.invalidateQueries({ queryKey: ['products', editingProduct?.id] });
       setIsModalOpen(false);
+      setErrorMessage("");
     },
     onError: (error: Error) => {
-      alert(`Error: ${error.message}`);
+      const friendlyMessage = getUserFriendlyError(error);
+      setErrorMessage(friendlyMessage);
+      console.error("Update product failed:", error);
     },
   });
 
@@ -228,6 +236,23 @@ export default function ProductModal({
 
         {/* Form */}
         <form onSubmit={onSubmit} className="flex-1 overflow-y-auto p-6 space-y-6">
+          {/* Error Message Display */}
+          {errorMessage && (
+            <div className="rounded-lg border border-red-500/20 bg-red-500/10 p-4 flex items-start gap-3">
+              <AlertCircle className="h-5 w-5 text-red-500 flex-shrink-0 mt-0.5" />
+              <div className="flex-1">
+                <p className="text-sm text-red-300">{errorMessage}</p>
+              </div>
+              <button
+                onClick={() => setErrorMessage("")}
+                type="button"
+                className="text-red-400 hover:text-red-300"
+              >
+                <X size={18} />
+              </button>
+            </div>
+          )}
+
           {activeTab === "basic" && (
             <BasicInfoTab
               formData={formData}

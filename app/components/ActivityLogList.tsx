@@ -2,9 +2,10 @@
 
 import React, { useState, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Search, Filter, X } from "lucide-react";
+import { Search, Filter, X, AlertCircle } from "lucide-react";
 import ActivityLogItem from "./ActivityLogItem";
 import { authenticatedFetch, API_BASE_URL } from "@/lib/auth";
+import { getUserFriendlyError } from "@/lib/errorHandler";
 import type { ActivityLog } from "@/app/types/logs";
 
 interface ActivityLogListProps {
@@ -27,7 +28,7 @@ export default function ActivityLogList({ limit }: ActivityLogListProps) {
     queryKey: ["activityLogs"],
     queryFn: async () => {
       const response = await authenticatedFetch(
-        `${API_BASE_URL}/logs/all`
+        `${API_BASE_URL}/logs`
       );
       if (!response.ok) {
         throw new Error(
@@ -74,21 +75,18 @@ export default function ActivityLogList({ limit }: ActivityLogListProps) {
   const showPagination = !limit && filteredLogs.length > pageSize;
 
   if (error) {
+    const friendlyMessage = getUserFriendlyError(error);
     return (
-      <div className="rounded-lg border border-red-500/20 bg-red-500/10 p-6 text-red-400 space-y-3">
-        <div>
-          <p className="font-semibold">Error loading activity logs</p>
-          <p className="text-sm text-red-300 mt-1">
-            {error instanceof Error ? error.message : "Unknown error"}
-          </p>
-        </div>
-        <div className="text-xs text-red-300 bg-black/30 p-3 rounded font-mono">
-          <p className="font-semibold mb-1">Troubleshooting:</p>
-          <ul className="list-disc list-inside space-y-1">
-            <li>Ensure backend has a <code>/logs</code> or <code>/activity-logs</code> endpoint</li>
-            <li>Verify the endpoint returns an array or object with logs/data properties</li>
-            <li>Check network tab in browser DevTools for exact error</li>
-          </ul>
+      <div className="rounded-lg border border-red-500/20 bg-red-500/10 p-6">
+        <div className="flex items-start gap-3">
+          <AlertCircle className="h-5 w-5 text-red-500 flex-shrink-0 mt-0.5" />
+          <div className="flex-1">
+            <p className="font-semibold text-red-400">Unable to load activity logs</p>
+            <p className="text-sm text-red-300 mt-1">{friendlyMessage}</p>
+            <p className="text-xs text-red-400 mt-2">
+              If this persists, please contact support or try refreshing the page.
+            </p>
+          </div>
         </div>
       </div>
     );
