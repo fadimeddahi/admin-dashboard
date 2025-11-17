@@ -1,17 +1,10 @@
-// API Base URL
+import { useAuthStore } from "./store/authStore";
+
 export const API_BASE_URL = "https://pcprimedz.onrender.com";
 
-// Auth endpoints
 export const AUTH_ENDPOINTS = {
   LOGIN: `${API_BASE_URL}/admin/login`,
   REGISTER: `${API_BASE_URL}/admin/register`,
-};
-
-// Storage keys
-export const STORAGE_KEYS = {
-  TOKEN: "auth_token",
-  USERNAME: "username",
-  ROLE: "user_role",
 };
 
 // Decode JWT token
@@ -32,30 +25,26 @@ export function decodeToken(token: string) {
   }
 }
 
-// Check if user is admin
 export function isAdmin(): boolean {
   if (typeof window === "undefined") return false;
   
-  const token = localStorage.getItem(STORAGE_KEYS.TOKEN);
+  const { token, user } = useAuthStore.getState();
   if (!token) return false;
 
   const decoded = decodeToken(token);
-  return decoded?.role === "admin";
+  return decoded?.role === "admin" || user?.role === "admin";
 }
 
-// Get stored token
 export function getToken(): string | null {
   if (typeof window === "undefined") return null;
-  return localStorage.getItem(STORAGE_KEYS.TOKEN);
+  return useAuthStore.getState().token;
 }
 
-// Get stored username
 export function getUsername(): string | null {
   if (typeof window === "undefined") return null;
-  return localStorage.getItem(STORAGE_KEYS.USERNAME);
+  return useAuthStore.getState().user?.username || null;
 }
 
-// Store auth data
 export function storeAuthData(token: string, username: string) {
   if (typeof window === "undefined") return;
   
@@ -64,25 +53,20 @@ export function storeAuthData(token: string, username: string) {
     throw new Error("Cannot store auth data: token is required");
   }
 
-  localStorage.setItem(STORAGE_KEYS.TOKEN, token);
-  localStorage.setItem(STORAGE_KEYS.USERNAME, username || "admin");
-  
-  // Decode and store role
   const decoded = decodeToken(token);
-  if (decoded?.role) {
-    localStorage.setItem(STORAGE_KEYS.ROLE, decoded.role);
-  }
+  const role = decoded?.role || "admin";
+  
+  useAuthStore.getState().setAuth(token, {
+    username: username || "admin",
+    role,
+  });
   
   console.debug("Auth data stored successfully", { username, tokenPreview: `${token.slice(0, 10)}...` });
 }
 
-// Clear auth data
 export function clearAuthData() {
   if (typeof window === "undefined") return;
-  
-  localStorage.removeItem(STORAGE_KEYS.TOKEN);
-  localStorage.removeItem(STORAGE_KEYS.USERNAME);
-  localStorage.removeItem(STORAGE_KEYS.ROLE);
+  useAuthStore.getState().clearAuth();
 }
 
 // Admin Login API call
@@ -234,7 +218,6 @@ export async function authenticatedFetch(url: string, options: RequestInit = {})
   }
 
   if (response.status === 401) {
-    // Token expired or invalid
     console.warn("authenticatedFetch received 401, clearing auth and redirecting to /login");
     clearAuthData();
     if (typeof window !== "undefined") {

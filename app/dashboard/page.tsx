@@ -33,7 +33,6 @@ export default function DashboardPage() {
 
   const stats = statsData?.data;
 
-  // Fetch orders for recent orders section
   const { data: orders = [], isLoading: ordersLoading } = useQuery<Order[]>({
     queryKey: ["orders"],
     queryFn: async () => {

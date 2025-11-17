@@ -53,7 +53,6 @@ export default function OrderDetailsModal({
           </div>
         </div>
 
-        {/* Customer Account Section */}
         {order.customer && (
           <div className="mb-4 border border-zinc-700 rounded-lg overflow-hidden">
             <button

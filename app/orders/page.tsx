@@ -10,8 +10,6 @@ import type { Order } from "../types/orders";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { authenticatedFetch, API_BASE_URL } from "../../lib/auth";
 
-// Order and OrderItem types are imported from `app/types/orders.ts`
-
 export default function OrdersPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);

@@ -163,7 +163,6 @@ export default function ProductModal({
 
   const isLoading = createMutation.isPending || updateMutation.isPending;
 
-  // Generic update that accepts unknown value types (we'll type-check at call sites)
   const updateField = (field: keyof Product, value: unknown) => {
     setFormData({ ...formData, [field]: value } as Partial<Product>);
   };
@@ -315,8 +314,6 @@ export default function ProductModal({
     </div>
   );
 }
-
-// Sub-components
 
 function Header({ 
   isEditing, 
@@ -681,8 +678,6 @@ function FormActions({
     </div>
   );
 }
-
-// Reusable Input Components
 
 function InputField({
   label,
