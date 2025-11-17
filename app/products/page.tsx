@@ -10,18 +10,8 @@ import Image from "next/image";
 import { authenticatedFetch, isAdmin } from "../../lib/auth";
 import { Product, TabType, Category } from "../types/products";
 import ProductModal from "../components/ProductModal";
-// ============================================
-// TYPES & INTERFACES
-// ============================================
-
-  // ============================================
-  // MAIN COMPONENT
-  // ============================================
 
 export default function ProductsPage() {
-  // State Management
-  // const queryClient = useQueryClient(); // Not used, remove to fix lint error
-  // Products
   const {
     data: products = [],
     isLoading: loadingProducts,
@@ -35,11 +25,9 @@ export default function ProductsPage() {
     },
   });
 
-  // Categories
   const {
     data: categories = [],
     isLoading: loadingCategories,
-  // refetch: refetchCategories, // Not used, remove to fix lint error
   } = useQuery<Category[]>({
     queryKey: ["categories"],
     queryFn: async () => {
@@ -56,7 +44,6 @@ export default function ProductsPage() {
   const [typeFilter, setTypeFilter] = useState<string>("All");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
-  // Use shared TabType values for tabs
   const [activeTab, setActiveTab] = useState<TabType>("basic");
   const [selectedProducts, setSelectedProducts] = useState<number[]>([]);
   
@@ -134,15 +121,11 @@ export default function ProductsPage() {
     );
   };
 
-  // ============================================
   // DATA FETCHING
-  // ============================================
 
   // useEffect and fetch functions removed; now handled by React Query
 
-  // ============================================
   // FILTERING LOGIC
-  // ============================================
 
   const filteredProducts = ((products ?? []) as Product[]).filter((product: Product) => {
     const term = searchTerm.toLowerCase();
@@ -176,9 +159,7 @@ export default function ProductsPage() {
     return matchesSearch && matchesCategory && matchesStock && matchesType;
   });
 
-  // ============================================
   // UTILITY FUNCTIONS
-  // ============================================
 
   const generateBarcode = () => {
     return `BRC${Date.now()}${Math.floor(Math.random() * 1000)}`;
@@ -220,9 +201,7 @@ export default function ProductsPage() {
     });
   };
 
-  // ============================================
   // CRUD OPERATIONS
-  // ============================================
 
   const handleAdd = () => {
     setEditingProduct(null);
@@ -296,17 +275,13 @@ export default function ProductsPage() {
     }
   };
 
-  // ============================================
   // AUTHORIZATION CHECK
-  // ============================================
   if (typeof window !== "undefined" && !isAdmin()) {
     window.location.href = "/login";
     return null;
   }
 
-  // ============================================
   // RENDER
-  // ============================================
 
   return (
     <ProtectedRoute>
