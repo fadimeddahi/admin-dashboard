@@ -30,7 +30,7 @@ export default function CPUComponentManager() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string>("");
 
-  const { data: cpus = [], isLoading: isFetching, error: fetchError } = useQuery({
+  const { data: cpus = [], isLoading: isFetching } = useQuery({
     queryKey: ["cpus"],
     queryFn: async () => {
       const response = await authenticatedFetch(`${API_BASE_URL}/components/cpu`);
