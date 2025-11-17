@@ -3,33 +3,48 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { registerAdmin, storeAuthData, isAdmin } from "../../lib/auth";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
+import { registerSchema, type RegisterFormData } from "@/lib/schemas/auth";
 
 export default function RegisterPage() {
   const router = useRouter();
-  const [username, setUsername] = useState("");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
   const [error, setError] = useState("");
-  const [loading, setLoading] = useState(false);
 
-  const handleRegister = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+  } = useForm<RegisterFormData>({
+    resolver: zodResolver(registerSchema),
+    defaultValues: {
+      username: "",
+      email: "",
+      password: "",
+      confirmPassword: "",
+    },
+  });
+
+  const onSubmit = async (formData: RegisterFormData) => {
     setError("");
-    setLoading(true);
     try {
-      console.log("Registering admin:", { username, email, password });
-      const response = await registerAdmin(username, email, password);
+      console.log("Registering admin:", { username: formData.username, email: formData.email });
+      const response = await registerAdmin(formData.username, formData.email, formData.password);
       console.log("Raw registration response:", response);
-      // If response is a Response object, parse JSON
-      let data = response;
+      
+      let result = response;
       if (response instanceof Response) {
-        data = await response.json();
-        console.log("Parsed JSON response:", data);
+        result = await response.json();
+        console.log("Parsed JSON response:", result);
       }
-      if (data.token && data.user && data.user.username) {
-        console.log("Token received:", data.token);
-        storeAuthData(data.token, data.user.username);
+      
+      if (result.token && result.user && result.user.username) {
+        console.log("Token received:", result.token);
+        storeAuthData(result.token, result.user.username);
         if (isAdmin()) {
           console.log("Admin privileges detected, redirecting to dashboard.");
           router.push("/dashboard");
@@ -38,15 +53,13 @@ export default function RegisterPage() {
           setError("Registration succeeded, but admin privileges not detected.");
         }
       } else {
-        console.error("Registration failed: No token returned.", data);
+        console.error("Registration failed: No token returned.", result);
         setError("Registration failed: No token returned.");
       }
     } catch (err: unknown) {
       console.error("Registration error:", err);
       const message = err instanceof Error ? err.message : String(err);
       setError(message || "Registration failed. Please try again.");
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -69,67 +82,75 @@ export default function RegisterPage() {
 
         {error && (
           <div className="bg-red-500/10 border border-red-500 text-red-400 px-4 py-3 rounded-lg mb-6">
-            <p className="font-semibold mb-1">⚠️ Registration Failed</p>
+            <p className="font-semibold mb-1">Registration Failed</p>
             <p className="text-sm">{error}</p>
           </div>
         )}
 
-        <form onSubmit={handleRegister} className="space-y-6">
-          <div>
-            <label htmlFor="username" className="block text-sm font-medium text-gray-300 mb-2">
-              Username
-            </label>
-            <input
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+          <div className="space-y-2">
+            <Label htmlFor="username">Username</Label>
+            <Input
               type="text"
               id="username"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              className="w-full px-4 py-3 bg-zinc-800 border border-zinc-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary text-white"
               placeholder="admin_user"
-              required
-              disabled={loading}
+              disabled={isSubmitting}
+              {...register("username")}
             />
+            {errors.username && (
+              <p className="text-sm text-red-400">{errors.username.message}</p>
+            )}
           </div>
 
-          <div>
-            <label htmlFor="email" className="block text-sm font-medium text-gray-300 mb-2">
-              Email
-            </label>
-            <input
+          <div className="space-y-2">
+            <Label htmlFor="email">Email</Label>
+            <Input
               type="email"
               id="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="w-full px-4 py-3 bg-zinc-800 border border-zinc-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary text-white"
               placeholder="your@email.com"
-              required
-              disabled={loading}
+              disabled={isSubmitting}
+              {...register("email")}
             />
+            {errors.email && (
+              <p className="text-sm text-red-400">{errors.email.message}</p>
+            )}
           </div>
 
-          <div>
-            <label htmlFor="password" className="block text-sm font-medium text-gray-300 mb-2">
-              Password
-            </label>
-            <input
+          <div className="space-y-2">
+            <Label htmlFor="password">Password</Label>
+            <Input
               type="password"
               id="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="w-full px-4 py-3 bg-zinc-800 border border-zinc-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary text-white"
               placeholder="Enter your password"
-              required
-              disabled={loading}
+              disabled={isSubmitting}
+              {...register("password")}
             />
+            {errors.password && (
+              <p className="text-sm text-red-400">{errors.password.message}</p>
+            )}
           </div>
 
-          <button
+          <div className="space-y-2">
+            <Label htmlFor="confirmPassword">Confirm Password</Label>
+            <Input
+              type="password"
+              id="confirmPassword"
+              placeholder="Confirm your password"
+              disabled={isSubmitting}
+              {...register("confirmPassword")}
+            />
+            {errors.confirmPassword && (
+              <p className="text-sm text-red-400">{errors.confirmPassword.message}</p>
+            )}
+          </div>
+
+          <Button
             type="submit"
-            disabled={loading}
-            className="w-full bg-primary hover:bg-primary-dark text-black font-semibold py-3 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            disabled={isSubmitting}
+            className="w-full"
           >
-            {loading ? "Registering..." : "Register"}
-          </button>
+            {isSubmitting ? "Registering..." : "Register"}
+          </Button>
         </form>
 
         <div className="mt-6 p-4 bg-zinc-800 rounded-lg border border-zinc-700 text-xs text-gray-400">
