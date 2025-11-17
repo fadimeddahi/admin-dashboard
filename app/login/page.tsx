@@ -3,23 +3,36 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { login, storeAuthData, isAdmin } from "../../lib/auth";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
+import { loginSchema, type LoginFormData } from "@/lib/schemas/auth";
 
 export default function LoginPage() {
   const router = useRouter();
-  const [username, setUsername] = useState("");
-  const [password, setPassword] = useState("");
-  const [rememberMe, setRememberMe] = useState(false);
   const [error, setError] = useState("");
-  const [loading, setLoading] = useState(false);
+  
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+  } = useForm<LoginFormData>({
+    resolver: zodResolver(loginSchema),
+    defaultValues: {
+      username: "",
+      password: "",
+      rememberMe: false,
+    },
+  });
 
-  const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const onSubmit = async (data: LoginFormData) => {
     setError("");
-    setLoading(true);
 
     try {
-      const response = await login(username, password);
+      const response = await login(data.username, data.password);
       
       if (!response.token && !response.access_token) {
         setError("Server did not return an authentication token. Please contact support.");
@@ -41,21 +54,18 @@ export default function LoginPage() {
       const message = err instanceof Error ? err.message : String(err);
       console.error("Login error:", err);
       
-      // Provide specific error messages
       let displayError = message || "Login failed. Please check your credentials.";
       if (message.includes("401")) {
-        displayError = "❌ Invalid username or password. Please try again.";
+        displayError = "Invalid username or password. Please try again.";
       } else if (message.includes("missing access token")) {
-        displayError = "❌ Server authentication error. The server did not return a token.";
+        displayError = "Server authentication error. The server did not return a token.";
       } else if (message.includes("Network error")) {
-        displayError = "❌ Network error. Check your connection and that the server is running.";
+        displayError = "Network error. Check your connection and that the server is running.";
       } else {
-        displayError = `❌ ${message}`;
+        displayError = message;
       }
       
       setError(displayError);
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -78,69 +88,59 @@ export default function LoginPage() {
 
         {error && (
           <div className="bg-red-500/10 border border-red-500 text-red-400 px-4 py-3 rounded-lg mb-6">
-            <p className="font-semibold mb-1">⚠️ Login Failed</p>
+            <p className="font-semibold mb-1">Login Failed</p>
             <p className="text-sm">{error}</p>
           </div>
         )}
 
-        <div className="bg-blue-500/10 border border-blue-500/50 text-blue-400 px-4 py-3 rounded-lg mb-6 text-sm">
-          <p className="font-semibold mb-1">💡 Test Credentials:</p>
-          <p>Create an admin account via API first, or use existing credentials.</p>
-        </div>
-
-        <form onSubmit={handleLogin} className="space-y-6">
-          <div>
-            <label htmlFor="username" className="block text-sm font-medium text-gray-300 mb-2">
-              Username or Email
-            </label>
-            <input
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+          <div className="space-y-2">
+            <Label htmlFor="username">Username or Email</Label>
+            <Input
               type="text"
               id="username"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              className="w-full px-4 py-3 bg-zinc-800 border border-zinc-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary text-white"
               placeholder="admin_user"
-              required
-              disabled={loading}
+              disabled={isSubmitting}
+              {...register("username")}
             />
+            {errors.username && (
+              <p className="text-sm text-red-400">{errors.username.message}</p>
+            )}
           </div>
 
-          <div>
-            <label htmlFor="password" className="block text-sm font-medium text-gray-300 mb-2">
-              Password
-            </label>
-            <input
+          <div className="space-y-2">
+            <Label htmlFor="password">Password</Label>
+            <Input
               type="password"
               id="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="w-full px-4 py-3 bg-zinc-800 border border-zinc-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary text-white"
               placeholder="Enter your password"
-              required
-              disabled={loading}
+              disabled={isSubmitting}
+              {...register("password")}
             />
+            {errors.password && (
+              <p className="text-sm text-red-400">{errors.password.message}</p>
+            )}
           </div>
 
           <div className="flex items-center">
             <input
               type="checkbox"
               id="remember"
-              checked={rememberMe}
-              onChange={(e) => setRememberMe(e.target.checked)}
               className="w-4 h-4 text-primary bg-zinc-800 border-zinc-700 rounded focus:ring-primary"
+              {...register("rememberMe")}
             />
-            <label htmlFor="remember" className="ml-2 text-sm text-gray-300">
+            <Label htmlFor="remember" className="ml-2 cursor-pointer">
               Remember me
-            </label>
+            </Label>
           </div>
 
-          <button
+          <Button
             type="submit"
-            disabled={loading}
-            className="w-full bg-primary hover:bg-primary-dark text-black font-semibold py-3 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            disabled={isSubmitting}
+            className="w-full"
           >
-            {loading ? "Logging in..." : "Login"}
-          </button>
+            {isSubmitting ? "Logging in..." : "Login"}
+          </Button>
         </form>
 
         {/* Remove API instructions and add register link */}
