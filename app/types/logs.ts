@@ -1,10 +1,10 @@
 export interface ActivityLog {
-  id: number;
-  admin_id?: number;
+  id: string;
+  admin_id?: string;
   username?: string;
   action: string;
   entity_type: "product" | "order" | "category" | "admin" | "other";
-  entity_id: number;
+  entity_id: string;
   entity_name?: string;
   old_value?: string;
   new_value?: string;

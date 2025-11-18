@@ -45,7 +45,7 @@ export default function ProductsPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [activeTab, setActiveTab] = useState<TabType>("basic");
-  const [selectedProducts, setSelectedProducts] = useState<number[]>([]);
+  const [selectedProducts, setSelectedProducts] = useState<string[]>([]);
   
   const [formData, setFormData] = useState<Partial<Product>>({
     name: "",
@@ -57,7 +57,7 @@ export default function ProductsPage() {
     discount: 0,
     warranty_months: 12,
     original_price: 0,
-    category_id: 1,
+    category_id: "",
     image_url: "",
     old_price: 0,
     is_promo: false,
@@ -114,8 +114,7 @@ export default function ProductsPage() {
     }
   };
 
-  // Utility: Toggle select a single product
-  const toggleSelect = (id: number) => {
+  const toggleSelect = (id: string) => {
     setSelectedProducts((prev) =>
       prev.includes(id) ? prev.filter((pid) => pid !== id) : [...prev, id]
     );
@@ -142,7 +141,7 @@ export default function ProductsPage() {
       cpu.includes(term) ||
       gpu.includes(term);
     
-    const matchesCategory = categoryFilter === "All" || product.category_id === parseInt(categoryFilter);
+    const matchesCategory = categoryFilter === "All" || product.category_id === categoryFilter;
     
     const matchesStock = 
       stockFilter === "All" ||
@@ -165,7 +164,7 @@ export default function ProductsPage() {
     return `BRC${Date.now()}${Math.floor(Math.random() * 1000)}`;
   };
 
-  const getCategoryName = (categoryId: number) => {
+  const getCategoryName = (categoryId: string) => {
   return ((categories ?? []) as Category[]).find((c: Category) => c.id === categoryId)?.name || `Category ${categoryId}`;
   };
 
@@ -180,7 +179,7 @@ export default function ProductsPage() {
       discount: 0,
       warranty_months: 12,
       original_price: 0,
-  category_id: ((categories ?? []) as Category[]).length > 0 ? ((categories ?? []) as Category[])[0].id : 1,
+      category_id: ((categories ?? []) as Category[]).length > 0 ? ((categories ?? []) as Category[])[0].id : "",
       image_url: "",
       old_price: 0,
       is_promo: false,
@@ -238,8 +237,7 @@ export default function ProductsPage() {
       alert("Failed to duplicate product. Please try again.");
     }
   };
-
-  const handleDelete = async (id: number) => {
+  const handleDelete = async (id: string) => {
   const product = (Array.isArray(products) ? products : []).find((p: Product) => p.id === id);
   if (!confirm(`Are you sure you want to delete "${product && (product as Product).name ? (product as Product).name : ''}"?`)) return;
     

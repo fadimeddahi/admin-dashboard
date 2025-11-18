@@ -1,10 +1,14 @@
 export interface Category {
-  id: number;
+  id: string;
   name: string;
+  description?: string;
+  image_url?: string;
+  created_at?: string;
+  updated_at?: string;
 }
 
 export interface Product {
-  id: number;
+  id: string;
   name: string;
   description?: string;
   quantity: number;
@@ -14,7 +18,7 @@ export interface Product {
   discount?: number;
   warranty_months: number;
   original_price?: number;
-  category_id: number;
+  category_id: string;
   category?: Category;
   created_at?: string;
   updated_at?: string;

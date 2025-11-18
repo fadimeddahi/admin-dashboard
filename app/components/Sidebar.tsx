@@ -3,12 +3,13 @@
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
-import { Home, Package, ShoppingCart, Activity, FileText, LogOut, Cpu } from "lucide-react";
+import { Home, Package, ShoppingCart, Activity, FileText, LogOut, Cpu, Tag } from "lucide-react";
 import { clearAuthData } from "../../lib/auth";
 
 const mainNavigation = [
   { name: "Dashboard", href: "/dashboard", icon: Home },
   { name: "Products", href: "/products", icon: Package },
+  { name: "Categories", href: "/categories", icon: Tag },
   { name: "Orders", href: "/orders", icon: ShoppingCart },
   { name: "Devis", href: "/devis", icon: FileText },
   { name: "Logs", href: "/logs", icon: Activity },

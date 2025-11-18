@@ -75,7 +75,7 @@ async function createProduct(formData: FormData) {
   return response.json();
 }
 
-async function updateProduct(id: number, formData: FormData) {
+async function updateProduct(id: string, formData: FormData) {
   const token = getToken();
 
   try {
@@ -147,7 +147,7 @@ export default function ProductModal({
 
   // Update mutation
   const updateMutation = useMutation({
-    mutationFn: ({ id, data }: { id: number; data: FormData }) => updateProduct(id, data),
+    mutationFn: ({ id, data }: { id: string; data: FormData }) => updateProduct(id, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['products'] });
       queryClient.invalidateQueries({ queryKey: ['products', editingProduct?.id] });
@@ -431,14 +431,20 @@ function BasicInfoTab({
       <div>
         <label className="block text-sm font-medium text-gray-300 mb-2">Category *</label>
         <select
-          value={formData.category_id || ""}
-          onChange={(e) => updateField("category_id", parseInt(e.target.value))}
+          key={`category-${formData.category_id}`}
+          value={formData.category_id ? String(formData.category_id) : ""}
+          onChange={(e) => {
+            const value = e.target.value;
+            console.log("Category changed to:", value, "Categories available:", categories);
+            updateField("category_id", value);
+          }}
           className="w-full px-4 py-3 bg-zinc-800 border border-zinc-700 rounded-lg text-white disabled:opacity-50"
           required
           disabled={disabled}
         >
-          {categories.map((cat) => (
-            <option key={cat.id} value={cat.id}>
+          <option value="">-- Select a category --</option>
+          {categories && categories.length > 0 && categories.map((cat) => (
+            <option key={cat.id} value={String(cat.id)}>
               {cat.name}
             </option>
           ))}

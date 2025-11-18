@@ -8,7 +8,7 @@ export interface DashboardStats {
 }
 
 export interface RecentOrder {
-  id: number | string;
+  id: string;
   number?: string;
   full_name?: string;
   email?: string;
@@ -18,7 +18,7 @@ export interface RecentOrder {
 }
 
 export interface LowStockProduct {
-  id: number;
+  id: string;
   name: string;
   quantity: number;
   barcode: string;
