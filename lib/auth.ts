@@ -175,9 +175,9 @@ export async function registerAdmin(
 export async function authenticatedFetch(url: string, options: RequestInit = {}) {
   const token = getToken();
 
-  // Build headers, prefer options.headers but ensure Content-Type default
+  // Build headers, prefer options.headers but ensure Content-Type default for non-FormData
   const headers = {
-    "Content-Type": "application/json",
+    ...(!(options.body instanceof FormData) && { "Content-Type": "application/json" }),
     ...(token && { Authorization: `Bearer ${token}` }),
     ...options.headers,
   };
