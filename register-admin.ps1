@@ -1,7 +1,7 @@
 # Register Admin User Script
 # Run this in PowerShell to create an admin account
 
-$apiUrl = "https://pcprimedz.onrender.com/users/register"
+$apiUrl = "https://api.primecomputerdz.dz/users/register"
 
 # Admin credentials - CHANGE THESE!
 $username = "admin_user"

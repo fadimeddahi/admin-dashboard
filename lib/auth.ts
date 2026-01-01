@@ -1,6 +1,6 @@
 import { useAuthStore } from "./store/authStore";
 
-export const API_BASE_URL = "https://pcprimedz.onrender.com";
+export const API_BASE_URL = "https://api.primecomputerdz.dz";
 
 export const AUTH_ENDPOINTS = {
   LOGIN: `${API_BASE_URL}/admin/login`,
