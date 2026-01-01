@@ -19,7 +19,7 @@ export default function ProductsPage() {
   } = useQuery<Product[]>({
     queryKey: ["products"],
     queryFn: async () => {
-      const response = await authenticatedFetch("https://pcprimedz.onrender.com/products/all");
+      const response = await authenticatedFetch("https://api.primecomputerdz.dz/products/all");
       if (!response.ok) throw new Error("Failed to fetch products");
       return response.json();
     },
@@ -31,7 +31,7 @@ export default function ProductsPage() {
   } = useQuery<Category[]>({
     queryKey: ["categories"],
     queryFn: async () => {
-      const response = await authenticatedFetch("https://pcprimedz.onrender.com/categories/all");
+      const response = await authenticatedFetch("https://api.primecomputerdz.dz/categories/all");
       if (!response.ok) throw new Error("Failed to fetch categories");
       return response.json();
     },
@@ -224,7 +224,7 @@ export default function ProductsPage() {
         name: `${product.name} (Copy)` ,
         barcode: generateBarcode(),
       };
-      const response = await authenticatedFetch("https://pcprimedz.onrender.com/products/create", {
+      const response = await authenticatedFetch("https://api.primecomputerdz.dz/products/create", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(duplicated),
@@ -242,7 +242,7 @@ export default function ProductsPage() {
   if (!confirm(`Are you sure you want to delete "${product && (product as Product).name ? (product as Product).name : ''}"?`)) return;
     
     try {
-      const response = await authenticatedFetch(`https://pcprimedz.onrender.com/products/${id}`, {
+      const response = await authenticatedFetch(`https://api.primecomputerdz.dz/products/${id}`, {
         method: "DELETE",
       });
       if (!response.ok) throw new Error("Failed to delete product");
@@ -259,7 +259,7 @@ export default function ProductsPage() {
     
     try {
       const deletePromises = selectedProducts.map(id =>
-        authenticatedFetch(`https://pcprimedz.onrender.com/products/${id}`, {
+        authenticatedFetch(`https://api.primecomputerdz.dz/products/${id}`, {
           method: "DELETE",
         })
       );

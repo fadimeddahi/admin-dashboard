@@ -41,7 +41,7 @@ async function createProduct(formData: FormData) {
   // Log request details to debug 401s
   try {
     console.debug("createProduct: sending request", {
-      url: 'https://pcprimedz.onrender.com/products/create',
+      url: 'https://api.primecomputerdz.dz/products/create',
       method: 'POST',
       hasToken: !!token,
       tokenPreview: token ? `${token.slice(0, 10)}...${token.slice(-4)}` : null,
@@ -54,7 +54,7 @@ async function createProduct(formData: FormData) {
   const headers: Record<string, string> = {};
   if (token) headers.Authorization = `Bearer ${token}`;
 
-  const response = await fetch('https://pcprimedz.onrender.com/products/create', {
+  const response = await fetch('https://api.primecomputerdz.dz/products/create', {
     method: 'POST',
     headers,
     body: formData,
@@ -80,7 +80,7 @@ async function updateProduct(id: string, formData: FormData) {
 
   try {
     console.debug("updateProduct: sending request", {
-      url: `https://pcprimedz.onrender.com/products/${id}`,
+      url: `https://api.primecomputerdz.dz/products/${id}`,
       method: 'PUT',
       hasToken: !!token,
       tokenPreview: token ? `${token.slice(0, 10)}...${token.slice(-4)}` : null,
@@ -93,7 +93,7 @@ async function updateProduct(id: string, formData: FormData) {
   const headers: Record<string, string> = {};
   if (token) headers.Authorization = `Bearer ${token}`;
 
-  const response = await fetch(`https://pcprimedz.onrender.com/products/${id}`, {
+  const response = await fetch(`https://api.primecomputerdz.dz/products/${id}`, {
     method: 'PUT',
     headers,
     body: formData,
