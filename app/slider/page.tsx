@@ -119,7 +119,7 @@ export default function SliderPage() {
       <div className="flex">
         <Sidebar />
         <div className="flex-1">
-          <Header title="Slider Management" />
+          <Header />
           <div className="p-6 bg-gray-50 min-h-screen">
             <div className="flex justify-between items-center mb-6">
               <h2 className="text-2xl font-bold">Manage Slider</h2>
