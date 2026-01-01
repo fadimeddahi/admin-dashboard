@@ -217,8 +217,8 @@ export default function ProductModal({
   };
 
   return (
-    <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
-      <div className="bg-zinc-900 border border-zinc-800 rounded-lg w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
+    <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4 overflow-y-auto">
+      <div className="bg-zinc-900 border border-zinc-800 rounded-lg w-full max-w-4xl my-4 overflow-hidden flex flex-col">
         {/* Header */}
         <Header 
           isEditing={!!editingProduct} 
@@ -234,7 +234,7 @@ export default function ProductModal({
         />
 
         {/* Form */}
-        <form onSubmit={onSubmit} className="flex-1 overflow-y-auto p-6 space-y-6">
+        <form onSubmit={onSubmit} className="flex-1 overflow-y-auto p-6 space-y-6 max-h-[60vh] scrollbar-thin scrollbar-thumb-zinc-700 scrollbar-track-zinc-900 hover:scrollbar-thumb-zinc-600">
           {/* Error Message Display */}
           {errorMessage && (
             <div className="rounded-lg border border-red-500/20 bg-red-500/10 p-4 flex items-start gap-3">
@@ -351,22 +351,24 @@ function TabNav({
   disabled: boolean;
 }) {
   return (
-    <div className="flex border-b border-zinc-800 overflow-x-auto">
-      {TABS.map((tab) => (
-        <button
-          key={tab.id}
-          type="button"
-          onClick={() => onTabChange(tab.id as TabType)}
-          disabled={disabled}
-          className={`px-6 py-3 font-medium whitespace-nowrap disabled:opacity-50 ${
-            activeTab === tab.id
-              ? "text-primary border-b-2 border-primary"
-              : "text-gray-400 hover:text-white"
-          }`}
-        >
-          {tab.label}
-        </button>
-      ))}
+    <div className="border-b border-zinc-800 overflow-x-auto py-4 px-2 scrollbar-thin scrollbar-thumb-zinc-700 scrollbar-track-transparent">
+      <div className="flex gap-2">
+        {TABS.map((tab) => (
+          <button
+            key={tab.id}
+            type="button"
+            onClick={() => onTabChange(tab.id as TabType)}
+            disabled={disabled}
+            className={`px-5 py-3 font-medium whitespace-nowrap disabled:opacity-50 text-sm rounded-lg transition-colors min-h-[44px] flex items-center justify-center ${
+              activeTab === tab.id
+                ? "text-primary bg-zinc-800 border-2 border-primary"
+                : "text-gray-400 hover:text-white hover:bg-zinc-800/50 border-2 border-transparent"
+            }`}
+          >
+            {tab.label}
+          </button>
+        ))}
+      </div>
     </div>
   );
 }
