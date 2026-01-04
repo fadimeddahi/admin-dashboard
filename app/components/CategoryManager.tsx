@@ -2,13 +2,14 @@
 
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Plus, X, AlertCircle } from "lucide-react";
+import { Plus, X, AlertCircle, Edit2, Trash2 } from "lucide-react";
 import { authenticatedFetch, API_BASE_URL } from "../../lib/auth";
 import { Category } from "../types/products";
 import Image from "next/image";
 
 export default function CategoryManager() {
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingCategory, setEditingCategory] = useState<Category | null>(null);
   const [formData, setFormData] = useState({ name: "", description: "" });
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string>("");
@@ -40,16 +41,56 @@ export default function CategoryManager() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["categories"] });
-      setFormData({ name: "", description: "" });
-      setImageFile(null);
-      setImagePreview("");
-      setIsModalOpen(false);
-      setErrorMessage("");
+      handleReset();
       setSuccessMessage("Category created successfully!");
       setTimeout(() => setSuccessMessage(""), 3000);
     },
     onError: (error: Error) => {
       setErrorMessage(error.message);
+    },
+  });
+
+  const updateMutation = useMutation({
+    mutationFn: async ({ id, data }: { id: string; data: FormData }) => {
+      const res = await authenticatedFetch(`${API_BASE_URL}/categories/${id}`, {
+        method: "PUT",
+        body: data,
+      });
+      if (!res.ok) {
+        const text = await res.text();
+        throw new Error(`Failed to update category: ${text}`);
+      }
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["categories"] });
+      handleReset();
+      setSuccessMessage("Category updated successfully!");
+      setTimeout(() => setSuccessMessage(""), 3000);
+    },
+    onError: (error: Error) => {
+      setErrorMessage(error.message);
+    },
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const res = await authenticatedFetch(`${API_BASE_URL}/categories/${id}`, {
+        method: "DELETE",
+      });
+      if (!res.ok) {
+        const text = await res.text();
+        throw new Error(`Failed to delete category: ${text}`);
+      }
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["categories"] });
+      setSuccessMessage("Category deleted successfully!");
+      setTimeout(() => setSuccessMessage(""), 3000);
+    },
+    onError: (error: Error) => {
+      alert(error.message || "Failed to delete category");
     },
   });
 
@@ -84,7 +125,28 @@ export default function CategoryManager() {
       form.append("image", imageFile);
     }
 
-    createMutation.mutate(form);
+    if (editingCategory) {
+      updateMutation.mutate({ id: editingCategory.id, data: form });
+    } else {
+      createMutation.mutate(form);
+    }
+  };
+
+  const handleEdit = (category: Category) => {
+    setEditingCategory(category);
+    setFormData({
+      name: category.name,
+      description: category.description || "",
+    });
+    setImagePreview(category.image_url || "");
+    setIsModalOpen(true);
+  };
+
+  const handleDelete = async (category: Category) => {
+    if (!confirm(`Are you sure you want to delete "${category.name}"? This action cannot be undone.`)) {
+      return;
+    }
+    deleteMutation.mutate(category.id);
   };
 
   const handleReset = () => {
@@ -92,6 +154,7 @@ export default function CategoryManager() {
     setImageFile(null);
     setImagePreview("");
     setErrorMessage("");
+    setEditingCategory(null);
     setIsModalOpen(false);
   };
 
@@ -148,9 +211,28 @@ export default function CategoryManager() {
                     {category.description}
                   </p>
                 )}
-                <p className="text-xs text-gray-500">
-                  ID: {category.id.substring(0, 8)}...
-                </p>
+                <div className="flex items-center justify-between">
+                  <p className="text-xs text-gray-500">
+                    ID: {category.id.substring(0, 8)}...
+                  </p>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => handleEdit(category)}
+                      className="p-2 hover:bg-zinc-800 rounded-lg transition-colors group"
+                      title="Edit category"
+                    >
+                      <Edit2 size={16} className="text-gray-400 group-hover:text-primary" />
+                    </button>
+                    <button
+                      onClick={() => handleDelete(category)}
+                      disabled={deleteMutation.isPending}
+                      className="p-2 hover:bg-zinc-800 rounded-lg transition-colors group"
+                      title="Delete category"
+                    >
+                      <Trash2 size={16} className="text-gray-400 group-hover:text-red-400" />
+                    </button>
+                  </div>
+                </div>
               </div>
             </div>
           ))}
@@ -163,7 +245,9 @@ export default function CategoryManager() {
           <div className="bg-zinc-900 border border-zinc-800 rounded-lg w-full max-w-md max-h-[90vh] overflow-hidden flex flex-col">
             {/* Modal Header */}
             <div className="p-6 border-b border-zinc-800 flex items-center justify-between">
-              <h3 className="text-xl font-bold text-white">Create Category</h3>
+              <h3 className="text-xl font-bold text-white">
+                {editingCategory ? "Edit Category" : "Create Category"}
+              </h3>
               <button
                 onClick={handleReset}
                 className="p-2 hover:bg-zinc-800 rounded-lg transition-colors"
@@ -228,7 +312,7 @@ export default function CategoryManager() {
                   placeholder="e.g., Laptops, Desktops"
                   className="w-full px-4 py-3 bg-zinc-800 border border-zinc-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary text-white"
                   required
-                  disabled={createMutation.isPending}
+                  disabled={createMutation.isPending || updateMutation.isPending}
                 />
               </div>
 
@@ -245,7 +329,7 @@ export default function CategoryManager() {
                   }
                   placeholder="Category description"
                   className="w-full px-4 py-3 bg-zinc-800 border border-zinc-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary text-white min-h-[100px]"
-                  disabled={createMutation.isPending}
+                  disabled={createMutation.isPending || updateMutation.isPending}
                 />
               </div>
             </form>
@@ -261,10 +345,16 @@ export default function CategoryManager() {
               </button>
               <button
                 onClick={(e) => handleSubmit(e as React.MouseEvent<HTMLButtonElement>)}
-                disabled={createMutation.isPending}
+                disabled={createMutation.isPending || updateMutation.isPending}
                 className="flex-1 px-4 py-2 bg-primary hover:bg-primary-dark text-black font-semibold rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {createMutation.isPending ? "Creating..." : "Create Category"}
+                {createMutation.isPending || updateMutation.isPending
+                  ? editingCategory
+                    ? "Updating..."
+                    : "Creating..."
+                  : editingCategory
+                  ? "Update Category"
+                  : "Create Category"}
               </button>
             </div>
           </div>
