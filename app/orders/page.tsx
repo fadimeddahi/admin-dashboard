@@ -25,7 +25,9 @@ export default function OrdersPage() {
         const text = await res.text();
         throw new Error(`Failed to fetch orders: ${res.status} ${text}`);
       }
-      return res.json();
+      const data = await res.json();
+      console.log('Orders fetched:', data.slice(0, 2)); // Log first 2 orders to check ID format
+      return data;
     },
   });
 
@@ -43,14 +45,19 @@ export default function OrdersPage() {
 
   const confirmMutation = useMutation({
     mutationFn: async (id: number | string) => {
+      console.log('Confirming order:', { id, url: `${API_BASE_URL}/orders/${id}/confirm` });
       const res = await authenticatedFetch(`${API_BASE_URL}/orders/${id}/confirm`, { method: "PUT" });
       if (!res.ok) {
         const text = await res.text();
-        throw new Error(`Confirm failed: ${res.status} ${text}`);
+        console.error('Confirm order failed:', { status: res.status, statusText: res.statusText, body: text });
+        throw new Error(`Confirm failed: ${res.status} ${text || res.statusText}`);
       }
       return res.json();
     },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["orders"] }),
+    onSuccess: () => {
+      alert('Order confirmed successfully!');
+      queryClient.invalidateQueries({ queryKey: ["orders"] });
+    },
   });
 
   const confirmCompanyOrderMutation = useMutation({
