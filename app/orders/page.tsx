@@ -140,12 +140,27 @@ export default function OrdersPage() {
   const handleConfirmOrder = async (displayedOrderId: string) => {
     if (!confirm("Confirm this order as completed?")) return;
     const entry = mappedOrders.find((m) => m.id === displayedOrderId);
-    if (!entry) return alert("Order not found");
+    if (!entry) return alert("Order not found in list");
+    
+    console.log('Attempting to confirm order:', { 
+      displayedId: displayedOrderId, 
+      apiId: entry.apiId,
+      orderData: entry.raw 
+    });
+    
     try {
       await confirmMutation.mutateAsync(entry.apiId);
       // success handled by invalidate
     } catch (err) {
-      alert((err as Error).message || "Failed to confirm order");
+      const errorMsg = (err as Error).message || "Failed to confirm order";
+      console.error('Confirm order error:', err);
+      
+      if (errorMsg.includes("404") || errorMsg.includes("not found")) {
+        alert("Order not found in database. It may have been deleted. The page will refresh.");
+        queryClient.invalidateQueries({ queryKey: ["orders"] });
+      } else {
+        alert(errorMsg);
+      }
     }
   };
 
