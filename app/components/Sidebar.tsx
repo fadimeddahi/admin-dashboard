@@ -12,7 +12,6 @@ const mainNavigation = [
   { name: "Categories", href: "/categories", icon: Tag },
   { name: "Slider", href: "/slider", icon: Zap },
   { name: "Orders", href: "/orders", icon: ShoppingCart },
-  { name: "Devis", href: "/devis", icon: FileText },
   { name: "Logs", href: "/logs", icon: Activity },
 ];
 
