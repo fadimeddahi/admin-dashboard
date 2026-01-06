@@ -132,27 +132,53 @@ export default function OrderDetailsModal({
           <p className="text-white text-2xl font-bold">{fmt(order.total)}</p>
         </div>
 
-        <div className="mb-4">
-          <p className="text-gray-400 text-sm">Items</p>
-          <div className="mt-2 space-y-2">
-            {(order.order_items || []).map((it) => {
-              const rawPrice = it.price;
-              const priceNum = Number(rawPrice);
-              const missingPrice = !Number.isFinite(priceNum) || priceNum <= 0;
-              return (
-                <div key={it.id} className="p-3 bg-zinc-800 rounded-lg flex justify-between items-center">
-                  <div className="text-sm text-gray-300">
-                    <div>Product ID: {it.product_id} × {it.quantity}</div>
-                    {missingPrice ? (
-                      <div className="text-xs text-amber-400 mt-1">Missing or invalid price (raw: {String(rawPrice)})</div>
-                    ) : (
-                      <div className="text-xs text-gray-500 mt-1">Unit price: ${priceNum.toFixed(2)}</div>
-                    )}
+        <div className="mb-6">
+          <h4 className="text-sm font-semibold text-gray-400 mb-3">Order Items</h4>
+          <div className="space-y-3">
+            {(order.order_items || []).length === 0 ? (
+              <p className="text-gray-500 text-sm text-center py-4">No items in this order</p>
+            ) : (
+              (order.order_items || []).map((it) => {
+                const rawPrice = it.price;
+                const priceNum = Number(rawPrice);
+                const quantity = Number(it.quantity ?? 1);
+                const validPrice = Number.isFinite(priceNum) && priceNum > 0;
+                const itemTotal = validPrice ? priceNum * quantity : 0;
+                
+                return (
+                  <div key={it.id} className="bg-zinc-800 rounded-lg p-4 border border-zinc-700">
+                    <div className="flex justify-between items-start gap-4">
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-2">
+                          <span className="text-white font-medium text-sm truncate">
+                            Product ID: {it.product_id}
+                          </span>
+                          <span className="flex-shrink-0 px-2 py-0.5 bg-primary/20 text-primary rounded text-xs font-semibold">
+                            Qty: {quantity}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-3 text-xs text-gray-400">
+                          {validPrice ? (
+                            <>
+                              <span>Unit Price: ${priceNum.toFixed(2)}</span>
+                              <span className="text-gray-600">•</span>
+                              <span>Subtotal: ${itemTotal.toFixed(2)}</span>
+                            </>
+                          ) : (
+                            <span className="text-amber-400">⚠️ Price not available</span>
+                          )}
+                        </div>
+                      </div>
+                      <div className="flex-shrink-0 text-right">
+                        <div className="text-white font-bold text-lg">
+                          ${itemTotal.toFixed(2)}
+                        </div>
+                      </div>
+                    </div>
                   </div>
-                  <div className="text-white font-semibold">{lineTotal(it)}</div>
-                </div>
-              );
-            })}
+                );
+              })
+            )}
           </div>
         </div>
 
