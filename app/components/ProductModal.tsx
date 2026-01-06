@@ -745,7 +745,6 @@ function NumberField({
         className="w-full px-4 py-3 bg-zinc-800 border border-zinc-700 rounded-lg text-white disabled:opacity-50 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
         required={required}
         disabled={disabled}
-        placeholder="0"
       />
     </div>
   );
