@@ -396,7 +396,10 @@ export default function OrdersPage() {
               <div className="bg-zinc-900 border border-zinc-800 rounded-lg p-6">
                 <p className="text-gray-400 text-sm mb-2">Total Revenue</p>
                 <p className="text-3xl font-bold text-green-400">
-                  ${mappedOrders.reduce((sum, order) => sum + order.total, 0).toFixed(2)}
+                  ${mappedOrders
+                    .filter((order) => order.status === "Completed")
+                    .reduce((sum, order) => sum + order.total, 0)
+                    .toFixed(2)}
                 </p>
               </div>
             </div>
