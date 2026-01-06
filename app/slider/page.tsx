@@ -39,16 +39,33 @@ export default function SliderPage() {
   const [imagePreview, setImagePreview] = useState<string>("");
 
   // Fetch all sliders
-  const { data: sliders = [], isLoading } = useQuery<Slider[]>({
+  const { data: sliders = [], isLoading, error } = useQuery<Slider[]>({
     queryKey: ["sliders"],
     queryFn: async () => {
+      console.log('🎠 Fetching sliders from:', `${API_BASE_URL}/sliders/all`);
       const res = await authenticatedFetch(`${API_BASE_URL}/sliders/all`);
-      if (!res.ok) throw new Error("Failed to fetch sliders");
-      return res.json();
+      const text = await res.text();
+      console.log('🎠 Sliders response:', { status: res.status, text });
+      
+      if (!res.ok) {
+        if (res.status === 404) {
+          console.log('⚠️ Sliders endpoint not found - returning empty array');
+          return [];
+        }
+        throw new Error(`Failed to fetch sliders: ${res.status} ${text}`);
+      }
+      
+      const data = JSON.parse(text);
+      console.log('🎠 Parsed sliders:', data);
+      return data;
     },
     refetchInterval: 30000,
     refetchOnWindowFocus: true,
   });
+
+  if (error) {
+    console.error('❌ Sliders error:', error);
+  }
 
   // Create slider
   const createMutation = useMutation({
