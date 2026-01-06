@@ -45,6 +45,7 @@ export default function OrdersPage() {
       return res.json();
     },
     retry: false, // Don't retry if endpoint doesn't exist
+    enabled: false, // Disable company orders until backend endpoint is ready
   });
 
   const confirmMutation = useMutation({
