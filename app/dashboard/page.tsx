@@ -22,16 +22,27 @@ interface StatsData {
 
 export default function DashboardPage() {
   // Fetch dashboard stats
-  const { data: statsData, isLoading: statsLoading } = useQuery<StatsData>({
+  const { data: statsData, isLoading: statsLoading, error: statsError } = useQuery<StatsData>({
     queryKey: ["stats"],
     queryFn: async () => {
+      console.log('📊 Fetching dashboard stats from:', `${API_BASE_URL}/stats`);
       const res = await authenticatedFetch(`${API_BASE_URL}/stats`);
-      if (!res.ok) throw new Error("Failed to fetch stats");
-      return res.json();
+      const text = await res.text();
+      console.log('📊 Stats response:', { status: res.status, text });
+      if (!res.ok) throw new Error(`Failed to fetch stats: ${res.status} ${text}`);
+      const data = JSON.parse(text);
+      console.log('📊 Parsed stats data:', data);
+      return data;
     },
+    refetchInterval: 30000, // Refetch every 30 seconds
+    refetchOnWindowFocus: true,
   });
 
   const stats = statsData?.data;
+  
+  if (statsError) {
+    console.error('❌ Stats error:', statsError);
+  }
 
   const { data: orders = [], isLoading: ordersLoading } = useQuery<Order[]>({
     queryKey: ["orders"],
