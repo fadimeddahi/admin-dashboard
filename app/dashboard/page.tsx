@@ -88,7 +88,7 @@ export default function DashboardPage() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <StatCard
           name="Total Revenue"
-          value={`$${(totalRevenue / 100).toFixed(2)}`}
+          value={`${(totalRevenue / 100).toFixed(2)} DA`}
           icon={DollarSign}
           color="bg-green-500"
           isLoading={statsLoading}

@@ -15,14 +15,14 @@ export default function OrderDetailsModal({
 
   const fmt = (v: unknown) => {
     const n = Number(v);
-    return Number.isFinite(n) ? `$${n.toFixed(2)}` : "—";
+    return Number.isFinite(n) ? `${n.toFixed(2)} DA` : "—";
   };
 
   const lineTotal = (it: import("../types/orders").OrderItem) => {
     const p = Number(it.price ?? 0);
     const q = Number(it.quantity ?? 0);
     const total = Number.isFinite(p) && Number.isFinite(q) ? p * q : 0;
-    return `$${total.toFixed(2)}`;
+    return `${total.toFixed(2)} DA`;
   };
   return (
     <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
@@ -106,7 +106,7 @@ export default function OrderDetailsModal({
                     <div>
                       <p className="text-gray-400">Total Spent</p>
                       <p className="text-white font-semibold">
-                        ${(order.customer.total_spent / 100).toFixed(2)}
+                        {(order.customer.total_spent / 100).toFixed(2)} DA
                       </p>
                     </div>
                   )}
@@ -124,7 +124,7 @@ export default function OrderDetailsModal({
 
         <div className="mb-4">
           <p className="text-gray-400 text-sm">Shipping</p>
-          <p className="text-white">{typeof order.shipping_price === "number" ? `$${order.shipping_price.toFixed(2)}` : "—"}</p>
+          <p className="text-white">{typeof order.shipping_price === "number" ? `${order.shipping_price.toFixed(2)} DA` : "—"}</p>
         </div>
 
         <div className="mb-4">
@@ -160,9 +160,9 @@ export default function OrderDetailsModal({
                         <div className="flex items-center gap-3 text-xs text-gray-400">
                           {validPrice ? (
                             <>
-                              <span>Unit Price: ${priceNum.toFixed(2)}</span>
+                              <span>Unit Price: {priceNum.toFixed(2)} DA</span>
                               <span className="text-gray-600">•</span>
-                              <span>Subtotal: ${itemTotal.toFixed(2)}</span>
+                              <span>Subtotal: {itemTotal.toFixed(2)} DA</span>
                             </>
                           ) : (
                             <span className="text-amber-400">⚠️ Price missing from backend - Contact support</span>
@@ -171,7 +171,7 @@ export default function OrderDetailsModal({
                       </div>
                       <div className="flex-shrink-0 text-right">
                         <div className="text-white font-bold text-lg">
-                          ${itemTotal.toFixed(2)}
+                          {itemTotal.toFixed(2)} DA
                         </div>
                       </div>
                     </div>

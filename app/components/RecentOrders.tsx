@@ -44,7 +44,7 @@ export default function RecentOrders({ orders, isLoading }: RecentOrdersProps) {
                 </p>
               </div>
               <div className="text-right">
-                <p className="text-white font-bold">${order.total.toFixed(2)}</p>
+                <p className="text-white font-bold">{order.total.toFixed(2)} DA</p>
                 <span
                   className={`text-xs px-2 py-1 rounded-full ${
                     order.confirmed

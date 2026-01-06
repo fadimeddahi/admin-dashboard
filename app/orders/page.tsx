@@ -333,7 +333,7 @@ export default function OrdersPage() {
                         <td className="px-6 py-4 text-white font-mono font-medium">{order.id}</td>
                         <td className="px-6 py-4 text-white">{order.customer}</td>
                         <td className="px-6 py-4 text-white font-semibold">
-                          ${order.total.toFixed(2)}
+                          {order.total.toFixed(2)} DA
                         </td>
                         <td className="px-6 py-4">
                           <span className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(order.status)}`}>
@@ -396,10 +396,10 @@ export default function OrdersPage() {
               <div className="bg-zinc-900 border border-zinc-800 rounded-lg p-6">
                 <p className="text-gray-400 text-sm mb-2">Total Revenue</p>
                 <p className="text-3xl font-bold text-green-400">
-                  ${mappedOrders
+                  {mappedOrders
                     .filter((order) => order.status === "Completed")
                     .reduce((sum, order) => sum + order.total, 0)
-                    .toFixed(2)}
+                    .toFixed(2)} DA
                 </p>
               </div>
             </div>
