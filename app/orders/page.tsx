@@ -20,15 +20,19 @@ export default function OrdersPage() {
   const { data: orders = [], isLoading } = useQuery<Order[]>({
     queryKey: ["orders"],
     queryFn: async () => {
+      console.log('🔄 Fetching orders from API...', new Date().toLocaleTimeString());
       const res = await authenticatedFetch(`${API_BASE_URL}/orders/all`);
       if (!res.ok) {
         const text = await res.text();
         throw new Error(`Failed to fetch orders: ${res.status} ${text}`);
       }
       const data = await res.json();
-      console.log('Orders fetched:', data.slice(0, 2)); // Log first 2 orders to check ID format
+      console.log(`✅ Orders fetched: ${data.length} orders`, data);
       return data;
     },
+    refetchOnWindowFocus: false, // Disable refetch on window focus
+    refetchOnMount: false, // Only fetch once on mount
+    staleTime: 5 * 60 * 1000, // Cache for 5 minutes
   });
 
   const { data: companyOrders = [], isLoading: isLoadingCompanyOrders } = useQuery<CompanyOrder[]>({
