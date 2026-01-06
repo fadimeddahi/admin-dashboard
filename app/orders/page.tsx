@@ -38,17 +38,16 @@ export default function OrdersPage() {
   const { data: companyOrders = [], isLoading: isLoadingCompanyOrders } = useQuery<CompanyOrder[]>({
     queryKey: ["company-orders"],
     queryFn: async () => {
-      const res = await authenticatedFetch(`${API_BASE_URL}/company-orders/all`);
+      const res = await authenticatedFetch(`${API_BASE_URL}/company-orders`);
       if (!res.ok) {
         const text = await res.text();
-        console.warn('Company orders endpoint not available:', res.status, text);
-        // Return empty array if endpoint doesn't exist (404)
+        console.warn('Company orders fetch failed:', res.status, text);
         if (res.status === 404) return [];
         throw new Error(`Failed to fetch company orders: ${res.status} ${text}`);
       }
       return res.json();
     },
-    retry: false, // Don't retry if endpoint doesn't exist
+    retry: false,
   });
 
   const confirmMutation = useMutation({
