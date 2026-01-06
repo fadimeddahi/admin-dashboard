@@ -737,11 +737,15 @@ function NumberField({
       </label>
       <input
         type="number"
-        value={value === 0 || value ? value : ""}
-        onChange={(e) => onChange(e.target.value === "" ? 0 : Number(e.target.value))}
+        value={value !== undefined && value !== null ? value : ""}
+        onChange={(e) => {
+          const val = e.target.value;
+          onChange(val === "" ? 0 : Number(val));
+        }}
         className="w-full px-4 py-3 bg-zinc-800 border border-zinc-700 rounded-lg text-white disabled:opacity-50"
         required={required}
         disabled={disabled}
+        placeholder="0"
       />
     </div>
   );
