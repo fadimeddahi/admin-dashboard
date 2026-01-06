@@ -208,9 +208,11 @@ export async function authenticatedFetch(url: string, options: RequestInit = {})
   });
 
   // Log response status and body on failure to aid debugging
+  // Clone the response before reading to avoid consuming the body stream
   if (!response.ok) {
     try {
-      const text = await response.text();
+      const clonedResponse = response.clone();
+      const text = await clonedResponse.text();
       console.warn(`authenticatedFetch response not ok (${response.status}) for ${url}:`, text);
     } catch {
       console.warn(`authenticatedFetch response not ok (${response.status}) for ${url} (could not read body)`);
