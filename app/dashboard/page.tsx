@@ -10,40 +10,8 @@ import type { Order } from "../types/orders";
 import type { Product } from "../types/products";
 import type { RecentOrder, LowStockProduct } from "../types/dashboard";
 
-interface StatsData {
-  success: boolean;
-  data: {
-    total_revenue: number;
-    total_orders: number;
-    total_products: number;
-    total_customers: number;
-  };
-}
-
 export default function DashboardPage() {
-  // Fetch dashboard stats
-  const { data: statsData, isLoading: statsLoading, error: statsError } = useQuery<StatsData>({
-    queryKey: ["stats"],
-    queryFn: async () => {
-      console.log('📊 Fetching dashboard stats from:', `${API_BASE_URL}/stats`);
-      const res = await authenticatedFetch(`${API_BASE_URL}/stats`);
-      const text = await res.text();
-      console.log('📊 Stats response:', { status: res.status, text });
-      if (!res.ok) throw new Error(`Failed to fetch stats: ${res.status} ${text}`);
-      const data = JSON.parse(text);
-      console.log('📊 Parsed stats data:', data);
-      return data;
-    },
-    refetchInterval: 30000, // Refetch every 30 seconds
-    refetchOnWindowFocus: true,
-  });
-
-  const stats = statsData?.data;
-  
-  if (statsError) {
-    console.error('❌ Stats error:', statsError);
-  }
-
+  // Fetch orders
   const { data: orders = [], isLoading: ordersLoading } = useQuery<Order[]>({
     queryKey: ["orders"],
     queryFn: async () => {
@@ -51,9 +19,11 @@ export default function DashboardPage() {
       if (!res.ok) throw new Error("Failed to fetch orders");
       return res.json();
     },
+    refetchInterval: 30000,
+    refetchOnWindowFocus: true,
   });
 
-  // Fetch products for low stock alerts
+  // Fetch products
   const { data: products = [], isLoading: productsLoading } = useQuery<Product[]>({
     queryKey: ["products"],
     queryFn: async () => {
@@ -61,12 +31,24 @@ export default function DashboardPage() {
       if (!res.ok) throw new Error("Failed to fetch products");
       return res.json();
     },
+    refetchInterval: 30000,
+    refetchOnWindowFocus: true,
   });
 
-  const totalRevenue = stats?.total_revenue || 0;
-  const totalOrders = stats?.total_orders || 0;
-  const totalProducts = stats?.total_products || 0;
-  const totalCustomers = stats?.total_customers || 0;
+  // Calculate stats from actual data (like in orders page)
+  const totalRevenue = orders
+    .filter((order) => order.confirmed) // Only count completed orders
+    .reduce((sum, order) => sum + (order.total || 0), 0);
+  
+  const totalOrders = orders.length;
+  const totalProducts = products.length;
+  
+  // Count unique customers from orders
+  const uniqueCustomers = new Set(
+    orders.map((order) => order.email || order.full_name).filter(Boolean)
+  ).size;
+  
+  const isLoading = ordersLoading || productsLoading;
 
   // Recent orders (last 5)
   const recentOrders: RecentOrder[] = [...orders]
@@ -99,31 +81,31 @@ export default function DashboardPage() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <StatCard
           name="Total Revenue"
-          value={`${(totalRevenue / 100).toFixed(2)} DA`}
+          value={`${totalRevenue.toFixed(2)} DA`}
           icon={DollarSign}
           color="bg-green-500"
-          isLoading={statsLoading}
+          isLoading={isLoading}
         />
         <StatCard
           name="Total Orders"
           value={totalOrders}
           icon={ShoppingCart}
           color="bg-blue-500"
-          isLoading={statsLoading}
+          isLoading={isLoading}
         />
         <StatCard
           name="Total Customers"
-          value={totalCustomers}
+          value={uniqueCustomers}
           icon={Users}
           color="bg-purple-500"
-          isLoading={statsLoading}
+          isLoading={isLoading}
         />
         <StatCard
           name="Total Products"
           value={totalProducts}
           icon={Package}
           color="bg-indigo-500"
-          isLoading={statsLoading}
+          isLoading={isLoading}
         />
       </div>
 
