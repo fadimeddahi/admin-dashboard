@@ -142,7 +142,7 @@ export default function OrderDetailsModal({
                 const rawPrice = it.price;
                 const priceNum = Number(rawPrice);
                 const quantity = Number(it.quantity ?? 1);
-                const validPrice = Number.isFinite(priceNum) && priceNum > 0;
+                const validPrice = Number.isFinite(priceNum) && priceNum >= 0;
                 const itemTotal = validPrice ? priceNum * quantity : 0;
                 
                 return (
@@ -165,7 +165,7 @@ export default function OrderDetailsModal({
                               <span>Subtotal: ${itemTotal.toFixed(2)}</span>
                             </>
                           ) : (
-                            <span className="text-amber-400">⚠️ Price not available</span>
+                            <span className="text-amber-400">⚠️ Price missing from backend - Contact support</span>
                           )}
                         </div>
                       </div>
