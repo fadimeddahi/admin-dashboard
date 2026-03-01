@@ -21,6 +21,7 @@ const mainNavigation: NavItem[] = [
   { name: "Categories", href: "/categories", icon: Tag },
   { name: "Slider", href: "/slider", icon: Zap },
   { name: "Orders", href: "/orders", icon: ShoppingCart },
+  { name: "Moderators", href: "/moderators", icon: Shield, minRole: "admin" },
   { name: "Logs", href: "/logs", icon: Activity, minRole: "admin" },
 ];
 
