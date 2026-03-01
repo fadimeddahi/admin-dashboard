@@ -2,7 +2,7 @@
 
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { getToken, isAdmin } from "@/lib/auth";
+import { getToken, isStaff, isAdmin } from "@/lib/auth";
 
 export default function Home() {
   const router = useRouter();
@@ -10,9 +10,9 @@ export default function Home() {
   useEffect(() => {
     const token = getToken();
     
-    // If user is authenticated and is admin, go to dashboard
-    if (token && isAdmin()) {
-      router.push("/dashboard");
+    // If user is authenticated and is staff, go to appropriate landing page
+    if (token && isStaff()) {
+      router.push(isAdmin() ? "/dashboard" : "/products");
     } else {
       // Otherwise go to login
       router.push("/login");

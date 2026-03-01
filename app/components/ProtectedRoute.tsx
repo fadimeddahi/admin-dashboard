@@ -2,9 +2,15 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { isAdmin, getToken } from "../../lib/auth";
+import { isStaff, isAdmin, getToken } from "../../lib/auth";
 
-export default function ProtectedRoute({ children }: { children: React.ReactNode }) {
+interface ProtectedRouteProps {
+  children: React.ReactNode;
+  /** "staff" allows admin + moderator; "admin" restricts to admin only. Default: "staff" */
+  requiredRole?: "staff" | "admin";
+}
+
+export default function ProtectedRoute({ children, requiredRole = "staff" }: ProtectedRouteProps) {
   const router = useRouter();
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
@@ -17,14 +23,20 @@ export default function ProtectedRoute({ children }: { children: React.ReactNode
       return;
     }
 
-    if (!isAdmin()) {
-      router.push("/login");
+    const hasAccess = requiredRole === "admin" ? isAdmin() : isStaff();
+    if (!hasAccess) {
+      // Moderator trying to access admin-only page → redirect to a staff-accessible page
+      if (isStaff()) {
+        router.push("/products");
+      } else {
+        router.push("/login");
+      }
       return;
     }
 
     setIsAuthenticated(true);
     setIsLoading(false);
-  }, [router]);
+  }, [router, requiredRole]);
 
   if (isLoading) {
     return (

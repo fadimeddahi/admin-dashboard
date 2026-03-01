@@ -7,7 +7,7 @@ import Sidebar from "../components/Sidebar";
 import Header from "../components/Header";
 import ProtectedRoute from "../components/ProtectedRoute";
 import Image from "next/image";
-import { authenticatedFetch, isAdmin } from "../../lib/auth";
+import { authenticatedFetch, isStaff } from "../../lib/auth";
 import { Product, TabType, Category } from "../types/products";
 import ProductModal from "../components/ProductModal";
 
@@ -264,7 +264,7 @@ export default function ProductsPage() {
   };
 
   // AUTHORIZATION CHECK
-  if (typeof window !== "undefined" && !isAdmin()) {
+  if (typeof window !== "undefined" && !isStaff()) {
     window.location.href = "/login";
     return null;
   }

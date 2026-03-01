@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { login, storeAuthData, isAdmin } from "../../lib/auth";
+import { login, storeAuthData, isStaff, isAdmin } from "../../lib/auth";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -42,12 +42,13 @@ export default function LoginPage() {
       // Store auth data
       storeAuthData(response.token || response.access_token, response.username);
       
-      // Check if user is admin
-      if (isAdmin()) {
-        router.push("/dashboard");
+      // Check if user is staff (admin or moderator)
+      if (isStaff()) {
+        // Admins go to dashboard; moderators go to products (dashboard is admin-only)
+        router.push(isAdmin() ? "/dashboard" : "/products");
       } else {
-        setError("Access denied. Admin privileges required.");
-        // Clear non-admin user data
+        setError("Access denied. Staff privileges required.");
+        // Clear non-staff user data
         localStorage.clear();
       }
     } catch (err: unknown) {

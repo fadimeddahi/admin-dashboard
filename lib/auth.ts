@@ -1,4 +1,4 @@
-import { useAuthStore } from "./store/authStore";
+import { useAuthStore, type UserRole } from "./store/authStore";
 
 export const API_BASE_URL = "https://api.primecomputerdz.dz";
 
@@ -25,14 +25,23 @@ export function decodeToken(token: string) {
   }
 }
 
-export function isAdmin(): boolean {
-  if (typeof window === "undefined") return false;
-  
+export function getUserRole(): UserRole | null {
+  if (typeof window === "undefined") return null;
+
   const { token, user } = useAuthStore.getState();
-  if (!token) return false;
+  if (!token) return null;
 
   const decoded = decodeToken(token);
-  return decoded?.role === "admin" || user?.role === "admin";
+  return (decoded?.role as UserRole) || user?.role || null;
+}
+
+export function isAdmin(): boolean {
+  return getUserRole() === "admin";
+}
+
+export function isStaff(): boolean {
+  const role = getUserRole();
+  return role === "admin" || role === "moderator";
 }
 
 export function getToken(): string | null {
@@ -54,7 +63,7 @@ export function storeAuthData(token: string, username: string) {
   }
 
   const decoded = decodeToken(token);
-  const role = decoded?.role || "admin";
+  const role = (decoded?.role as UserRole) || "admin";
   
   useAuthStore.getState().setAuth(token, {
     username: username || "admin",

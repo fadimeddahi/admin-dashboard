@@ -1,13 +1,15 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 
+export type UserRole = "user" | "moderator" | "admin";
+
 interface AuthState {
   token: string | null;
   user: {
     username: string;
-    role: string;
+    role: UserRole;
   } | null;
-  setAuth: (token: string, user: { username: string; role: string }) => void;
+  setAuth: (token: string, user: { username: string; role: UserRole }) => void;
   clearAuth: () => void;
   isAuthenticated: () => boolean;
 }

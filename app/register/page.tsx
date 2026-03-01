@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { registerAdmin, storeAuthData, isAdmin } from "../../lib/auth";
+import { registerAdmin, storeAuthData, isStaff, isAdmin } from "../../lib/auth";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -45,12 +45,12 @@ export default function RegisterPage() {
       if (result.token && result.user && result.user.username) {
         console.log("Token received:", result.token);
         storeAuthData(result.token, result.user.username);
-        if (isAdmin()) {
-          console.log("Admin privileges detected, redirecting to dashboard.");
-          router.push("/dashboard");
+        if (isStaff()) {
+          console.log("Staff privileges detected, redirecting.");
+          router.push(isAdmin() ? "/dashboard" : "/products");
         } else {
-          console.warn("Registration succeeded, but admin privileges not detected.");
-          setError("Registration succeeded, but admin privileges not detected.");
+          console.warn("Registration succeeded, but staff privileges not detected.");
+          setError("Registration succeeded, but staff privileges not detected.");
         }
       } else {
         console.error("Registration failed: No token returned.", result);

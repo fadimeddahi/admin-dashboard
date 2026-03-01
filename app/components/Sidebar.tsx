@@ -3,19 +3,28 @@
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
-import { Home, Package, ShoppingCart, Activity, FileText, LogOut, Cpu, Tag, Zap } from "lucide-react";
-import { clearAuthData } from "../../lib/auth";
+import { Home, Package, ShoppingCart, Activity, FileText, LogOut, Cpu, Tag, Zap, Shield } from "lucide-react";
+import { clearAuthData, getUserRole } from "../../lib/auth";
+import type { UserRole } from "../../lib/store/authStore";
 
-const mainNavigation = [
-  { name: "Dashboard", href: "/dashboard", icon: Home },
+interface NavItem {
+  name: string;
+  href: string;
+  icon: React.ComponentType<{ size?: number }>;
+  /** Minimum role required: "staff" (admin+moderator) or "admin" (admin only). Default: "staff" */
+  minRole?: "staff" | "admin";
+}
+
+const mainNavigation: NavItem[] = [
+  { name: "Dashboard", href: "/dashboard", icon: Home, minRole: "admin" },
   { name: "Products", href: "/products", icon: Package },
   { name: "Categories", href: "/categories", icon: Tag },
   { name: "Slider", href: "/slider", icon: Zap },
   { name: "Orders", href: "/orders", icon: ShoppingCart },
-  { name: "Logs", href: "/logs", icon: Activity },
+  { name: "Logs", href: "/logs", icon: Activity, minRole: "admin" },
 ];
 
-const componentNavigation = [
+const componentNavigation: NavItem[] = [
   { name: "CPU", href: "/components/cpu", icon: Cpu },
   { name: "RAM", href: "/components/ram", icon: Package },
   { name: "Storage", href: "/components/storage", icon: Package },
@@ -23,14 +32,25 @@ const componentNavigation = [
   { name: "Monitor", href: "/components/monitor", icon: Package },
 ];
 
+function canAccess(item: NavItem, role: UserRole | null): boolean {
+  if (!item.minRole || item.minRole === "staff") {
+    return role === "admin" || role === "moderator";
+  }
+  return role === "admin";
+}
+
 export default function Sidebar() {
   const pathname = usePathname();
   const router = useRouter();
+  const role = getUserRole();
 
   const handleLogout = () => {
     clearAuthData();
     router.push("/login");
   };
+
+  const roleBadge = role === "admin" ? "Admin" : role === "moderator" ? "Moderator" : "User";
+  const roleBadgeColor = role === "admin" ? "bg-red-500/20 text-red-400" : "bg-blue-500/20 text-blue-400";
 
   return (
     <div className="w-64 bg-zinc-900 min-h-screen border-r border-zinc-800 flex flex-col">
@@ -43,10 +63,14 @@ export default function Sidebar() {
           className="object-contain"
         />
         <h1 className="text-2xl font-bold text-primary text-center">Admin Panel</h1>
+        <span className={`text-xs font-semibold px-2 py-1 rounded-full ${roleBadgeColor}`}>
+          <Shield size={12} className="inline mr-1" />
+          {roleBadge}
+        </span>
       </div>
       
       <nav className="px-4 space-y-2 flex-1">
-        {mainNavigation.map((item) => {
+        {mainNavigation.filter((item) => canAccess(item, role)).map((item) => {
           const Icon = item.icon;
           const isActive = pathname === item.href;
           
@@ -68,7 +92,7 @@ export default function Sidebar() {
 
         <div className="pt-4 mt-4 border-t border-zinc-700">
           <p className="text-xs font-semibold text-gray-400 uppercase px-4 mb-2">Components</p>
-          {componentNavigation.map((item) => {
+          {componentNavigation.filter((item) => canAccess(item, role)).map((item) => {
             const Icon = item.icon;
             const isActive = pathname === item.href;
             

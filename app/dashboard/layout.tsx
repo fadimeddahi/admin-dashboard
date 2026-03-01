@@ -8,7 +8,7 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   return (
-    <ProtectedRoute>
+    <ProtectedRoute requiredRole="admin">
       <div className="flex">
         <Sidebar />
         <div className="flex-1">
