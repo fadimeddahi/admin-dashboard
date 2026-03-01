@@ -143,11 +143,6 @@ export default function LoginPage() {
             {isSubmitting ? "Logging in..." : "Login"}
           </Button>
         </form>
-
-        {/* Remove API instructions and add register link */}
-        <div className="mt-6 p-4 bg-zinc-800 rounded-lg border border-zinc-700 text-xs text-gray-400 text-center">
-          Don&apos;t have an admin account? <a href="/register" className="text-primary font-semibold">Register here</a>
-        </div>
       </div>
     </div>
   );

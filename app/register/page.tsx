@@ -10,6 +10,9 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { registerSchema, type RegisterFormData } from "@/lib/schemas/auth";
+import ProtectedRoute from "../components/ProtectedRoute";
+import Sidebar from "../components/Sidebar";
+import Header from "../components/Header";
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -64,8 +67,13 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-black">
-      <div className="bg-zinc-900 p-8 rounded-lg shadow-lg w-full max-w-md border border-zinc-800">
+    <ProtectedRoute requiredRole="admin">
+      <div className="flex">
+        <Sidebar />
+        <div className="flex-1 min-w-0">
+          <Header />
+          <main className="p-4 lg:p-6 flex items-start justify-center">
+    <div className="bg-zinc-900 p-8 rounded-lg shadow-lg w-full max-w-md border border-zinc-800 mt-8">
         <div className="text-center mb-8">
           <div className="flex justify-center mb-6">
             <Image 
@@ -152,11 +160,10 @@ export default function RegisterPage() {
             {isSubmitting ? "Registering..." : "Register"}
           </Button>
         </form>
-
-        <div className="mt-6 p-4 bg-zinc-800 rounded-lg border border-zinc-700 text-xs text-gray-400">
-          Already have an account? <a href="/login" className="text-primary font-semibold">Login here</a>
+      </div>
+          </main>
         </div>
       </div>
-    </div>
+    </ProtectedRoute>
   );
 }

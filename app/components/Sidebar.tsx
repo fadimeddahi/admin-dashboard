@@ -3,7 +3,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
-import { Home, Package, ShoppingCart, Activity, FileText, LogOut, Cpu, Tag, Zap, Shield } from "lucide-react";
+import { Home, Package, ShoppingCart, Activity, FileText, LogOut, Cpu, Tag, Zap, Shield, UserPlus } from "lucide-react";
 import { clearAuthData, getUserRole } from "../../lib/auth";
 import type { UserRole } from "../../lib/store/authStore";
 
@@ -22,6 +22,7 @@ const mainNavigation: NavItem[] = [
   { name: "Slider", href: "/slider", icon: Zap },
   { name: "Orders", href: "/orders", icon: ShoppingCart },
   { name: "Moderators", href: "/moderators", icon: Shield, minRole: "admin" },
+  { name: "Register Admin", href: "/register", icon: UserPlus, minRole: "admin" },
   { name: "Logs", href: "/logs", icon: Activity, minRole: "admin" },
 ];
 
