@@ -158,23 +158,20 @@ export async function login(username: string, password: string) {
   }
 }
 
-// Admin Register API call
+// Admin Register API call — requires admin Bearer token (admin-only route)
 export async function registerAdmin(
   username: string,
   email: string,
   password: string
 ) {
-  const response = await fetch(AUTH_ENDPOINTS.REGISTER, {
+  const response = await authenticatedFetch(AUTH_ENDPOINTS.REGISTER, {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
     body: JSON.stringify({ username, email, password }),
   });
 
   if (!response.ok) {
-    const error = await response.json();
-    throw new Error(error.message || "Admin registration failed");
+    const error = await response.json().catch(() => ({}));
+    throw new Error(error.message || error.error || "Admin registration failed");
   }
 
   return response.json();
