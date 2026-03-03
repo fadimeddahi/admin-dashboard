@@ -23,6 +23,7 @@ export interface Product {
   created_at?: string;
   updated_at?: string;
   image_url: string;
+  image_urls?: string[];
   old_price?: number;
   is_promo?: boolean;
   etat: "Neuf" | "Excellent" | "Tres Bon" | "Bon" | "Acceptable";

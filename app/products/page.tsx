@@ -429,8 +429,15 @@ export default function ProductsPage() {
                             </td>
                             <td className="px-2 py-2">
                               <div className="w-12 h-12 bg-zinc-800 rounded flex items-center justify-center relative overflow-hidden">
-                                {product.image_url ? (
-                                  <Image src={product.image_url} alt={product.name} fill className="object-cover" />
+                                {(product.image_urls?.[0] || product.image_url) ? (
+                                  <>
+                                    <Image src={product.image_urls?.[0] || product.image_url} alt={product.name} fill className="object-cover" />
+                                    {(product.image_urls?.length ?? 0) > 1 && (
+                                      <span className="absolute bottom-0 right-0 bg-black/70 text-[9px] text-white px-1 rounded-tl">
+                                        +{(product.image_urls?.length ?? 1) - 1}
+                                      </span>
+                                    )}
+                                  </>
                                 ) : (
                                   <span className="text-gray-500 text-[10px]">IMG</span>
                                 )}

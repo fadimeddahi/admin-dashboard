@@ -1,5 +1,5 @@
-import { X, AlertCircle } from "lucide-react";
-import React, { useState } from "react";
+import { X, AlertCircle, Upload, Trash2 } from "lucide-react";
+import React, { useState, useRef } from "react";
 import Image from "next/image";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Product, TabType, Category } from "../types/products";
@@ -123,8 +123,15 @@ export default function ProductModal({
   generateBarcode,
   categories,
 }: ProductModalProps) {
-  const [imageFile, setImageFile] = useState<File | null>(null);
-  const [imagePreview, setImagePreview] = useState<string>("");
+  const [imageFiles, setImageFiles] = useState<File[]>([]);
+  const [imagePreviews, setImagePreviews] = useState<string[]>([]);
+  const [existingImages, setExistingImages] = useState<string[]>(
+    () => editingProduct?.image_urls?.length
+      ? editingProduct.image_urls
+      : editingProduct?.image_url
+        ? [editingProduct.image_url]
+        : []
+  );
   const [errorMessage, setErrorMessage] = useState<string>("");
   
   const queryClient = useQueryClient();
@@ -167,10 +174,24 @@ export default function ProductModal({
     setFormData({ ...formData, [field]: value } as Partial<Product>);
   };
 
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0] || null;
-    setImageFile(file);
-    setImagePreview(file ? URL.createObjectURL(file) : "");
+  const handleImagesChange = (files: FileList | null) => {
+    if (!files) return;
+    const newFiles = Array.from(files);
+    const newPreviews = newFiles.map((f) => URL.createObjectURL(f));
+    setImageFiles((prev) => [...prev, ...newFiles]);
+    setImagePreviews((prev) => [...prev, ...newPreviews]);
+  };
+
+  const removeNewImage = (index: number) => {
+    setImageFiles((prev) => prev.filter((_, i) => i !== index));
+    setImagePreviews((prev) => {
+      URL.revokeObjectURL(prev[index]);
+      return prev.filter((_, i) => i !== index);
+    });
+  };
+
+  const removeExistingImage = (index: number) => {
+    setExistingImages((prev) => prev.filter((_, i) => i !== index));
   };
 
   const onSubmit = (e: React.FormEvent) => {
@@ -204,8 +225,20 @@ export default function ProductModal({
 
     const form = new FormData();
     form.append("product", JSON.stringify(productData));
-    if (imageFile) {
-      form.append("image", imageFile);
+
+    // Append existing image URLs that haven't been removed
+    if (existingImages.length > 0) {
+      form.append("existing_images", JSON.stringify(existingImages));
+    }
+
+    // Append all new image files
+    for (const file of imageFiles) {
+      form.append("images", file);
+    }
+
+    // Fallback: if backend still expects single "image" field, also send first new file
+    if (imageFiles.length > 0) {
+      form.append("image", imageFiles[0]);
     }
 
     // Submit based on mode
@@ -280,10 +313,14 @@ export default function ProductModal({
 
           {activeTab === "images" && (
             <ImagesTab
-              imagePreview={imagePreview}
-              handleImageChange={handleImageChange}
+              existingImages={existingImages}
+              imagePreviews={imagePreviews}
+              onFilesSelected={handleImagesChange}
+              onRemoveNew={removeNewImage}
+              onRemoveExisting={removeExistingImage}
               isEditing={!!editingProduct}
               disabled={isLoading}
+              totalCount={existingImages.length + imageFiles.length}
             />
           )}
 
@@ -564,38 +601,115 @@ function InventoryTab({
   );
 }
 
-function ImagesTab({ 
-  imagePreview, 
-  handleImageChange, 
+function ImagesTab({
+  existingImages,
+  imagePreviews,
+  onFilesSelected,
+  onRemoveNew,
+  onRemoveExisting,
   isEditing,
-  disabled 
+  disabled,
+  totalCount,
 }: {
-  imagePreview: string;
-  handleImageChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  existingImages: string[];
+  imagePreviews: string[];
+  onFilesSelected: (files: FileList | null) => void;
+  onRemoveNew: (index: number) => void;
+  onRemoveExisting: (index: number) => void;
   isEditing: boolean;
   disabled: boolean;
+  totalCount: number;
 }) {
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [isDragging, setIsDragging] = useState(false);
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(false);
+    onFilesSelected(e.dataTransfer.files);
+  };
+
   return (
     <div className="space-y-4">
-      <label className="block text-sm font-medium text-gray-300 mb-2">
-        Product Image {!isEditing && "*"}
-      </label>
+      <div className="flex items-center justify-between">
+        <label className="block text-sm font-medium text-gray-300">
+          Product Images {!isEditing && totalCount === 0 && "*"}
+        </label>
+        <span className="text-xs text-gray-500">{totalCount} image{totalCount !== 1 ? "s" : ""}</span>
+      </div>
+
+      {/* Drop zone */}
+      <div
+        onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
+        onDragLeave={() => setIsDragging(false)}
+        onDrop={handleDrop}
+        onClick={() => fileInputRef.current?.click()}
+        className={`border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-colors ${
+          isDragging
+            ? "border-primary bg-primary/10"
+            : "border-zinc-700 hover:border-zinc-500 bg-zinc-800/50"
+        } ${disabled ? "opacity-50 pointer-events-none" : ""}`}
+      >
+        <Upload className="w-8 h-8 text-gray-400 mx-auto mb-2" />
+        <p className="text-gray-300 text-sm font-medium">Click to upload or drag & drop</p>
+        <p className="text-gray-500 text-xs mt-1">PNG, JPG, WEBP up to 5MB each</p>
+      </div>
       <input
+        ref={fileInputRef}
         type="file"
         accept="image/*"
-        onChange={handleImageChange}
-        className="w-full px-4 py-3 bg-zinc-800 border border-zinc-700 rounded-lg text-white disabled:opacity-50"
-        required={!isEditing}
+        multiple
+        onChange={(e) => onFilesSelected(e.target.files)}
+        className="hidden"
         disabled={disabled}
       />
-      {imagePreview && (
-        <Image
-          src={imagePreview}
-          alt="Preview"
-          width={192}
-          height={192}
-          className="w-48 h-48 object-cover rounded-lg border border-zinc-700"
-        />
+
+      {/* Existing images (when editing) */}
+      {existingImages.length > 0 && (
+        <div>
+          <p className="text-xs font-semibold text-gray-400 uppercase mb-2">Current Images</p>
+          <div className="grid grid-cols-4 gap-3">
+            {existingImages.map((url, i) => (
+              <div key={`existing-${i}`} className="relative group rounded-lg overflow-hidden border border-zinc-700 aspect-square">
+                <Image src={url} alt={`Image ${i + 1}`} fill className="object-cover" />
+                {i === 0 && (
+                  <span className="absolute top-1 left-1 text-[10px] bg-primary text-black px-1.5 py-0.5 rounded font-semibold">Main</span>
+                )}
+                <button
+                  type="button"
+                  onClick={(e) => { e.stopPropagation(); onRemoveExisting(i); }}
+                  className="absolute top-1 right-1 p-1 bg-red-600 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                  disabled={disabled}
+                >
+                  <Trash2 className="w-3 h-3 text-white" />
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* New image previews */}
+      {imagePreviews.length > 0 && (
+        <div>
+          <p className="text-xs font-semibold text-gray-400 uppercase mb-2">New Images</p>
+          <div className="grid grid-cols-4 gap-3">
+            {imagePreviews.map((url, i) => (
+              <div key={`new-${i}`} className="relative group rounded-lg overflow-hidden border border-zinc-700 aspect-square">
+                <Image src={url} alt={`New ${i + 1}`} fill className="object-cover" />
+                <span className="absolute top-1 left-1 text-[10px] bg-blue-500 text-white px-1.5 py-0.5 rounded font-semibold">New</span>
+                <button
+                  type="button"
+                  onClick={(e) => { e.stopPropagation(); onRemoveNew(i); }}
+                  className="absolute top-1 right-1 p-1 bg-red-600 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                  disabled={disabled}
+                >
+                  <Trash2 className="w-3 h-3 text-white" />
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
       )}
     </div>
   );
