@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Plus, Trash2, Eye, EyeOff, Edit, GripVertical, Image as ImageIcon } from "lucide-react";
 import { authenticatedFetch, API_BASE_URL } from "../../lib/auth";
@@ -10,6 +10,10 @@ interface Slider {
   id: string;
   title: string;
   image_url: string;
+  mobile_image_url?: string;
+  phone_image_url?: string;
+  desktop_image_url?: string;
+  pc_image_url?: string;
   link: string;
   order: number;
   is_active: boolean;
@@ -23,20 +27,47 @@ interface SliderFormData {
   order: number;
   is_active: boolean;
   image: File | null;
+  mobile_image: File | null;
 }
+
+const getDesktopImageUrl = (slider: Slider): string => {
+  return slider.image_url || slider.desktop_image_url || slider.pc_image_url || "";
+};
+
+const getMobileImageUrl = (slider: Slider): string => {
+  return slider.mobile_image_url || slider.phone_image_url || getDesktopImageUrl(slider);
+};
+
+const getResponsiveImageUrl = (slider: Slider, isMobileScreen: boolean): string => {
+  const desktop = getDesktopImageUrl(slider);
+  const mobile = getMobileImageUrl(slider);
+  return isMobileScreen ? mobile || desktop : desktop || mobile;
+};
 
 export default function SliderPage() {
   const queryClient = useQueryClient();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingSlider, setEditingSlider] = useState<Slider | null>(null);
+  const [isMobileScreen, setIsMobileScreen] = useState(false);
   const [formData, setFormData] = useState<SliderFormData>({
     title: "",
     link: "",
     order: 0,
     is_active: true,
     image: null,
+    mobile_image: null,
   });
-  const [imagePreview, setImagePreview] = useState<string>("");
+  const [desktopPreview, setDesktopPreview] = useState<string>("");
+  const [mobilePreview, setMobilePreview] = useState<string>("");
+
+  useEffect(() => {
+    const mediaQuery = window.matchMedia("(max-width: 768px)");
+    const updateScreenType = () => setIsMobileScreen(mediaQuery.matches);
+
+    updateScreenType();
+    mediaQuery.addEventListener("change", updateScreenType);
+    return () => mediaQuery.removeEventListener("change", updateScreenType);
+  }, []);
 
   // Fetch all sliders
   const { data: sliders = [], isLoading, error } = useQuery<Slider[]>({
@@ -78,6 +109,9 @@ export default function SliderPage() {
       if (data.image) {
         formDataObj.append("image", data.image);
       }
+      if (data.mobile_image) {
+        formDataObj.append("mobile_image", data.mobile_image);
+      }
 
       const res = await authenticatedFetch(`${API_BASE_URL}/sliders`, {
         method: "POST",
@@ -105,6 +139,9 @@ export default function SliderPage() {
       formDataObj.append("is_active", data.is_active.toString());
       if (data.image) {
         formDataObj.append("image", data.image);
+      }
+      if (data.mobile_image) {
+        formDataObj.append("mobile_image", data.mobile_image);
       }
 
       const res = await authenticatedFetch(`${API_BASE_URL}/sliders/${id}`, {
@@ -161,8 +198,10 @@ export default function SliderPage() {
       order: sliders.length + 1,
       is_active: true,
       image: null,
+      mobile_image: null,
     });
-    setImagePreview("");
+    setDesktopPreview("");
+    setMobilePreview("");
     setIsModalOpen(true);
   };
 
@@ -174,8 +213,10 @@ export default function SliderPage() {
       order: slider.order,
       is_active: slider.is_active,
       image: null,
+      mobile_image: null,
     });
-    setImagePreview(slider.image_url);
+    setDesktopPreview(getDesktopImageUrl(slider));
+    setMobilePreview(getMobileImageUrl(slider));
     setIsModalOpen(true);
   };
 
@@ -188,17 +229,31 @@ export default function SliderPage() {
       order: 0,
       is_active: true,
       image: null,
+      mobile_image: null,
     });
-    setImagePreview("");
+    setDesktopPreview("");
+    setMobilePreview("");
   };
 
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleDesktopImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
       setFormData({ ...formData, image: file });
       const reader = new FileReader();
       reader.onloadend = () => {
-        setImagePreview(reader.result as string);
+        setDesktopPreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleMobileImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setFormData({ ...formData, mobile_image: file });
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setMobilePreview(reader.result as string);
       };
       reader.readAsDataURL(file);
     }
@@ -209,8 +264,8 @@ export default function SliderPage() {
       alert("Please fill in all required fields");
       return;
     }
-    if (!editingSlider && !formData.image) {
-      alert("Please upload an image");
+    if (!editingSlider && (!formData.image || !formData.mobile_image)) {
+      alert("Please upload both desktop and mobile images");
       return;
     }
 
@@ -277,12 +332,18 @@ export default function SliderPage() {
                     </div>
 
                     <div className="relative w-32 h-20 bg-zinc-800 rounded overflow-hidden flex-shrink-0">
-                      <Image
-                        src={slider.image_url}
-                        alt={slider.title}
-                        fill
-                        className="object-cover"
-                      />
+                      {getResponsiveImageUrl(slider, isMobileScreen) ? (
+                        <Image
+                          src={getResponsiveImageUrl(slider, isMobileScreen)}
+                          alt={slider.title}
+                          fill
+                          className="object-cover"
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center text-gray-500 text-xs">
+                          No image
+                        </div>
+                      )}
                     </div>
 
                     <div className="flex-1 min-w-0">
@@ -399,24 +460,50 @@ export default function SliderPage() {
 
                 <div>
                   <label className="block text-gray-400 mb-2">
-                    Image {!editingSlider && "*"}
+                    Desktop Image {!editingSlider && "*"}
                   </label>
                   <input
                     type="file"
                     accept="image/*"
-                    onChange={handleImageChange}
+                    onChange={handleDesktopImageChange}
                     className="w-full bg-zinc-800 border border-zinc-700 rounded px-4 py-2 text-white focus:outline-none focus:border-primary"
                   />
                   <p className="text-gray-500 text-sm mt-1">
-                    Recommended: 1920x600px (16:9), Max 5MB
+                    Send as "image". Recommended: 1920x600px (desktop), Max 5MB.
                   </p>
                 </div>
 
-                {imagePreview && (
+                <div>
+                  <label className="block text-gray-400 mb-2">
+                    Mobile Image {!editingSlider && "*"}
+                  </label>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleMobileImageChange}
+                    className="w-full bg-zinc-800 border border-zinc-700 rounded px-4 py-2 text-white focus:outline-none focus:border-primary"
+                  />
+                  <p className="text-gray-500 text-sm mt-1">
+                    Send as "mobile_image". Recommended: 1080x1350px (phone), Max 5MB.
+                  </p>
+                </div>
+
+                {desktopPreview && (
                   <div className="relative w-full h-48 bg-zinc-800 rounded overflow-hidden">
                     <Image
-                      src={imagePreview}
-                      alt="Preview"
+                      src={desktopPreview}
+                      alt="Desktop Preview"
+                      fill
+                      className="object-contain"
+                    />
+                  </div>
+                )}
+
+                {mobilePreview && (
+                  <div className="relative w-full h-64 bg-zinc-800 rounded overflow-hidden max-w-xs">
+                    <Image
+                      src={mobilePreview}
+                      alt="Mobile Preview"
                       fill
                       className="object-contain"
                     />
